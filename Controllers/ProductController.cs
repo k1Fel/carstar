@@ -69,5 +69,105 @@ namespace api.Controllers
                 }
                 return NoContent();
             }
+            //SEARCH
+                // GET: api/products/filter
+            [HttpGet("filter")]
+            public async Task<IActionResult> FilterProducts(
+                [FromQuery] int? categoryId,
+                [FromQuery] decimal? minPrice,
+                [FromQuery] decimal? maxPrice,
+                [FromQuery] string? search,
+                [FromQuery] bool? inStock,
+                [FromQuery] string? similar)
+            {
+                try
+                {
+                    var products = await _productService.GetAllProductsAsync();
+                    var filtered = products.AsEnumerable();
+
+                    // Фільтр за категорією
+                    if (categoryId.HasValue)
+                    {
+                        filtered = filtered.Where(p => p.CategoryId == categoryId.Value);
+                    }
+
+                    // Фільтр за ціною
+                    if (minPrice.HasValue)
+                    {
+                        filtered = filtered.Where(p => p.Price >= minPrice.Value);
+                    }
+
+                    if (maxPrice.HasValue)
+                    {
+                        filtered = filtered.Where(p => p.Price <= maxPrice.Value);
+                    }
+
+                    // Фільтр наявності
+                    if (inStock.HasValue && inStock.Value)
+                    {
+                        filtered = filtered.Where(p => p.Stock > 0);
+                    }
+
+                    // Пошук за назвою або описом
+                    if (!string.IsNullOrWhiteSpace(search))
+                    {
+                        filtered = filtered.Where(p =>
+                            p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                            (p.Description != null && p.Description.Contains(search, StringComparison.OrdinalIgnoreCase))
+                        );
+                    }
+
+                    
+                    if (!string.IsNullOrWhiteSpace(similar))
+                    {
+                        string request = similar.Trim().ToLower();
+                        var keywords = request.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                      
+                        var matched = filtered.Where(p =>
+                            keywords.All(keyword => p.Name.ToLower().Contains(keyword))
+                        ).ToList();
+
+                        if (!matched.Any())
+                        {
+                            return NotFound(new { message = "Товари з такими ключовими словами не знайдено" });
+                        }
+
+                      
+                        var groups = matched
+                            .GroupBy(p => string.Join(" ", keywords))
+                            .Select(g => new
+                            {
+                                Keyword = g.Key,
+                                Count = g.Count(),
+                                Items = g.Select(p => new
+                                {
+                                    p.Id,
+                                    p.Name,
+                                    p.Price,
+                                    p.Stock,
+                                    CategoryName = p.Category?.Name ?? "Без категорії"
+                                }).OrderBy(p => p.Price) 
+                            })
+                            .ToList();
+
+                        return Ok(groups);
+                    }
+
+                    
+                    var result = filtered.Select(p => p.ToProductDto()).ToList();
+
+                    if (!result.Any())
+                    {
+                        return NotFound(new { message = "Товари за заданими критеріями не знайдено" });
+                    }
+
+                    return Ok(result);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+            }  
         }
     }

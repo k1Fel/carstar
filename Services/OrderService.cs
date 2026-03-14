@@ -2,87 +2,197 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using api.DTO.Order;
-using api.Mappers.OrderMappers;
 using api.Models;
 using api.Repository.Intrefaces;
 using api.Services.Interfaces;
+using api.Mappers.OrderMappers;
 
 namespace api.Services
 {
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orderRepository;
-        private readonly IProductRepository _productRepository;
         private readonly ICartRepository _cartRepository;
-        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository, ICartRepository cartRepository)
+        private readonly IProductRepository _productRepository;
+
+        public OrderService(
+            IOrderRepository orderRepository,
+            ICartRepository cartRepository,
+            IProductRepository productRepository)
         {
             _orderRepository = orderRepository;
-            _productRepository = productRepository;
             _cartRepository = cartRepository;
-
-        }
-        public async Task<Order> CreateOrder(Order order)
-        {
-            return await _orderRepository.CreateOrderAsync(order);
+            _productRepository = productRepository;
         }
 
-        public async Task<Order> CreateOrderFromCart(int accountId, CreateOrderDto orderDto)
+        // ✅ Створити замовлення з кошика
+        public async Task<Order> CreateOrderFromCartAsync(int accountId, string shippingAddress)
         {
+            // 1. Отримати кошик
             var cart = await _cartRepository.GetCartByAccountId(accountId);
-            if (cart == null|| cart.CartItems == null || !cart.CartItems.Any())
+            if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
             {
-                throw new ArgumentException("Cart is empty or does not exist.");
+                throw new Exception("Кошик порожній");
             }
 
-            var order = orderDto.ToOrder();
+            // 2. Створити Order
+            var order = new Order
+            {
+                AccountId = accountId,
+                ShippingAddress = shippingAddress,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow,
+                OrderItems = new List<OrderItem>()
+            };
+
+            // 3. Копіювати CartItems в OrderItems
+            decimal totalAmount = 0;
+
             foreach (var cartItem in cart.CartItems)
             {
+                // Перевірити що товар існує
                 var product = await _productRepository.GetProductByIdAsync(cartItem.ProductId);
                 if (product == null)
                 {
-                    throw new ArgumentException($"Product with ID {cartItem.ProductId} does not exist.");
+                    throw new Exception($"Товар з ID {cartItem.ProductId} не знайдено");
                 }
-                var orderItem = cartItem.ToOrderItem(order.Id, product.Price);
-                order.OrderItems.Add(orderItem);
-                product.Stock -= cartItem.Quantity; // Update stock
+
+                // Перевірити Stock
+                if (product.Stock < cartItem.Quantity)
+                {
+                    throw new Exception($"Недостатня кількість товару: {product.Name}. Доступно: {product.Stock}, замовлено: {cartItem.Quantity}");
+                }
+
+                // Зменшити Stock
+                product.Stock -= cartItem.Quantity;
                 await _productRepository.UpdateProductAsync(product.Id, product);
-                var orderItems = cartItem.ToOrderItem(order.Id, product.Price);
-                order.OrderItems.Add(orderItems);
+
+                // Створити OrderItem (використовуємо mapper)
+                var orderItem = cartItem.ToOrderItem(order.Id);
+                order.OrderItems.Add(orderItem);
+
+                totalAmount += orderItem.Price * orderItem.Quantity;
             }
-            order.TotalAmount = order.OrderItems.Sum(oi => oi.Price * oi.Quantity);
+
+            // 4. Встановити TotalAmount
+            order.TotalAmount = totalAmount;
+
+            // 5. Зберегти Order
             var createdOrder = await _orderRepository.CreateOrderAsync(order);
-            await _cartRepository.ClearCartAsync(cart.Id); // Clear cart after order creation
+
+            // 6. Очистити кошик
+            await _cartRepository.ClearCartAsync(cart.Id);
 
             return createdOrder;
         }
 
-        public async Task<bool> DeleteOrder(int id)
+        // ✅ Отримати замовлення за ID
+        public async Task<Order?> GetOrderByIdAsync(int orderId, int accountId)
         {
-            return await _orderRepository.CancelOrderAsync(id);
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+
+            // Перевірка що замовлення належить користувачу
+            if (order != null && order.AccountId != accountId)
+            {
+                throw new UnauthorizedAccessException("Ви не маєте доступу до цього замовлення");
+            }
+
+            return order;
         }
 
-        public async Task<List<Order>> GetAllOrders()
+        // ✅ Отримати всі замовлення користувача
+        public async Task<List<Order>> GetOrdersByAccountIdAsync(int accountId)
+        {
+            return await _orderRepository.GetOrdersByAccountIdAsync(accountId);
+        }
+
+        // ✅ Отримати всі замовлення (для адміна)
+        public async Task<List<Order>> GetAllOrdersAsync()
         {
             return await _orderRepository.GetAllOrdersAsync();
-
         }
 
-        public async Task<Order?> GetOrderById(int id)
+        // ✅ Оновити статус замовлення
+        public async Task<Order?> UpdateOrderStatusAsync(int orderId, string status)
         {
-            return await _orderRepository.GetOrderByIdAsync(id);
-        }
-
-        public async Task<Order?> UpdateOrder(int id, Order order)
-        {
-            var existingOrder = await _orderRepository.GetOrderByIdAsync(id);
-            if (existingOrder == null)
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+            if (order == null)
             {
                 return null;
             }
-            existingOrder.Status = order.Status;
-            await _orderRepository.UpdateOrderAsync(existingOrder);
-            return existingOrder;
+
+            // Валідація переходів статусів
+            var validTransitions = new Dictionary<string, List<string>>
+            {
+                ["Pending"] = new List<string> { "Processing", "Cancelled" },
+                ["Processing"] = new List<string> { "Shipped", "Cancelled" },
+                ["Shipped"] = new List<string> { "Delivered" },
+                ["Delivered"] = new List<string>(),
+                ["Cancelled"] = new List<string>()
+            };
+
+            if (!validTransitions.ContainsKey(order.Status))
+            {
+                throw new Exception($"Невідомий статус: {order.Status}");
+            }
+
+            if (!validTransitions[order.Status].Contains(status))
+            {
+                throw new Exception($"Неможливо змінити статус з '{order.Status}' на '{status}'");
+            }
+
+            // Якщо скасовуємо - повертаємо товари на склад
+            if (status == "Cancelled" && order.Status != "Cancelled")
+            {
+                foreach (var orderItem in order.OrderItems ?? new List<OrderItem>())
+                {
+                    var product = await _productRepository.GetProductByIdAsync(orderItem.ProductId);
+                    if (product != null)
+                    {
+                        product.Stock += orderItem.Quantity;
+                        await _productRepository.UpdateProductAsync(product.Id, product);
+                    }
+                }
+            }
+
+            await _orderRepository.UpdateOrderStatusAsync(orderId, status);
+            return await _orderRepository.GetOrderByIdAsync(orderId);
+        }
+
+        // ✅ Скасувати замовлення (користувачем)
+        public async Task<bool> CancelOrderAsync(int orderId, int accountId)
+        {
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+
+            if (order == null)
+            {
+                return false;
+            }
+
+            // Перевірка що замовлення належить користувачу
+            if (order.AccountId != accountId)
+            {
+                throw new UnauthorizedAccessException("Ви не маєте доступу до цього замовлення");
+            }
+
+            // Можна скасувати тільки Pending замовлення
+            if (order.Status != "Pending")
+            {
+                throw new Exception($"Неможливо скасувати замовлення зі статусом '{order.Status}'. Можна скасувати тільки замовлення зі статусом 'Pending'");
+            }
+
+            // Повертаємо товари на склад
+            foreach (var orderItem in order.OrderItems ?? new List<OrderItem>())
+            {
+                var product = await _productRepository.GetProductByIdAsync(orderItem.ProductId);
+                if (product != null)
+                {
+                    product.Stock += orderItem.Quantity;
+                    await _productRepository.UpdateProductAsync(product.Id, product);
+                }
+            }
+
+            return await _orderRepository.CancelOrderAsync(orderId);
         }
     }
 }

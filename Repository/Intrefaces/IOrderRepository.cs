@@ -6,18 +6,21 @@ using api.Models;
 
 namespace api.Repository.Intrefaces
 {
-    public interface IOrderRepository
+     public interface IOrderRepository
     {
+        // READ
         Task<Order?> GetOrderByIdAsync(int orderId);
         Task<List<Order>> GetOrdersByAccountIdAsync(int accountId);
         Task<List<Order>> GetAllOrdersAsync();
-        
+
+        // CREATE
         Task<Order> CreateOrderAsync(Order order);
-        
-        Task UpdateOrderAsync(Order order);
-        Task UpdateOrderStatusAsync(int orderId, string status);
 
+        // UPDATE
+        Task<Order?> UpdateOrderAsync(Order order);
+        Task<bool> UpdateOrderStatusAsync(int orderId, string status);
+
+        // CANCEL/DELETE
         Task<bool> CancelOrderAsync(int orderId);
-
     }
 }

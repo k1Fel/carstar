@@ -54,6 +54,29 @@ namespace api.Data
             .HasForeignKey(ci => ci.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
             });
+                modelBuilder.Entity<Order>(entity =>
+                {
+                    entity.HasKey(o => o.Id);
+        
+                    entity.HasOne(o => o.Account)
+                    .WithMany()
+                    .HasForeignKey(o => o.AccountId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                });
+                modelBuilder.Entity<OrderItem>(entity =>
+                {
+                    entity.HasKey(oi => oi.Id);
+        
+                    entity.HasOne(oi => oi.Order)
+                    .WithMany(o => o.OrderItems)
+                    .HasForeignKey(oi => oi.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+        
+                    entity.HasOne(oi => oi.Product)
+                    .WithMany()
+                    .HasForeignKey(oi => oi.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                });
         }
     }
 }

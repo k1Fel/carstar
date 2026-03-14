@@ -9,11 +9,11 @@ namespace api.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<Order> CreateOrder(Order order);
-        Task<Order?> GetOrderById(int id);
-        Task<List<Order>> GetAllOrders();
-        Task<Order?> UpdateOrder(int id, Order order);
-        Task<bool> DeleteOrder(int id);
-        Task<Order> CreateOrderFromCart(int accountId, CreateOrderDto orderDto);
+        Task<Order> CreateOrderFromCartAsync(int accountId, string shippingAddress);
+        Task<Order?> GetOrderByIdAsync(int orderId, int accountId);
+        Task<List<Order>> GetOrdersByAccountIdAsync(int accountId);
+        Task<List<Order>> GetAllOrdersAsync(); 
+        Task<Order?> UpdateOrderStatusAsync(int orderId, string status);
+        Task<bool> CancelOrderAsync(int orderId, int accountId);
     }
 }
