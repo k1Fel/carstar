@@ -1,0 +1,54 @@
+# .gitignore
+
+# Binaries
+bin/
+obj/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.vsidx
+*.vspscc
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Migrations (optional - якщо не хочеш ділитися міграціями)
+# Migrations/
+
+# Sensitive data
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+
+# Keep example settings
+!appsettings.Example.json
+
+# NuGet packages
+*.nupkg
+packages/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
