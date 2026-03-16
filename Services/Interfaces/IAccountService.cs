@@ -13,5 +13,6 @@ namespace api.Services
         Task<Account?> Login(LoginDto model);
         Task<Account?> GetAccountById(int id);
         Task<bool> isEmailExists(string email);
+        Task<bool> isUserExists(string userName, string email);
     }
 }

@@ -13,5 +13,6 @@ namespace api.Services.Interfaces
         Task<List<Category>> GetAllCategories();
         Task<Category?> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto);
         Task<bool> DeleteCategory(int id);
+        Task<Category?> CategoryExists(string name);
     }
 }

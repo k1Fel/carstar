@@ -49,6 +49,10 @@ namespace api.Services
             await _categoryRepository.UpdateCategory(id, updatedCategory);
             return updatedCategory;
         }
-
+        public async Task<Category?> CategoryExists(string name)
+        {
+            var category = await _categoryRepository.GetCategoryByName(name);
+            return category;
+        }
     }
 }

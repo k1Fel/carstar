@@ -59,5 +59,9 @@ namespace api.Repository
             return await _context.Products
                 .CountAsync(p => p.CategoryId == categoryId);
         }
+        public async Task<Category?> GetCategoryByName(string name)
+        {
+            return await _context.Categories.FirstOrDefaultAsync(c => c.Name == name);
+        }
     }
 }   

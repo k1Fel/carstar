@@ -26,6 +26,15 @@ namespace api.Controllers
         {
             try
             {
+                if (dto == null || dto.AccountId <= 0 || string.IsNullOrEmpty(dto.ShippingAddress))
+                {
+                    return BadRequest(new { message = "Невірні дані для створення замовлення" });
+                }
+                if(dto.TotalAmount <= 0)
+                {
+                    return BadRequest(new { message = "Загальна сума замовлення повинна бути більше нуля" });
+                }
+                
                 var order = await _orderService.CreateOrderFromCartAsync(
                     dto.AccountId,
                     dto.ShippingAddress
@@ -47,11 +56,19 @@ namespace api.Controllers
             try
             {
                 var order = await _orderService.GetOrderByIdAsync(id, accountId);
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID замовлення" });
+                }
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
                 if (order == null)
                 {
                     return NotFound(new { message = "Замовлення не знайдено" });
                 }
-
+                
                 return Ok(order.ToOrderResponseDto());
             }
             catch (UnauthorizedAccessException ex)
@@ -72,6 +89,10 @@ namespace api.Controllers
             try
             {
                 var orders = await _orderService.GetOrdersByAccountIdAsync(accountId);
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
                 var ordersDto = orders.Select(o => o.ToOrderResponseDto()).ToList();
                 return Ok(ordersDto);
             }
@@ -89,6 +110,12 @@ namespace api.Controllers
             try
             {
                 var orders = await _orderService.GetAllOrdersAsync();
+                if (orders == null || !orders.Any())
+                {
+                    return NotFound(new { message = "Замовлення не знайдено" });
+                }
+               
+                
                 var ordersDto = orders.Select(o => o.ToOrderResponseDto()).ToList();
                 return Ok(ordersDto);
             }

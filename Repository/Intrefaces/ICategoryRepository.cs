@@ -13,5 +13,6 @@ namespace api.Repository.Intrefaces
         Task<List<Category>> GetAllCategories();
         Task<Category?> UpdateCategory(int id, Category category);
         Task<bool> DeleteCategory(int id);
+        Task<Category?> GetCategoryByName(string name);
     }
 }

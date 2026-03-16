@@ -25,32 +25,93 @@ namespace api.Controllers
             [HttpGet]
             public async Task<IActionResult> GetAllProducts()
             {
+                try
+                {
                 var products = await _productService.GetAllProductsAsync();
+                if (products == null || !products.Any())
+                {
+                    return NotFound(new { message = "Товари не знайдено" });
+                }
                 var response = products.Select(p => p.ToProductDto());
                 return Ok(response);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = "Помилка при отриманні товарів", error = ex.Message });
+                }
             }
-
             [HttpGet("{id}")]
             public async Task<IActionResult> GetProductById(int id)
             {
+                try
+                {
                 var product = await _productService.GetProductByIdAsync(id);
                 if (product == null)
                 {
                     return NotFound();
                 }
                 return Ok(product.ToProductDto());
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = "Помилка при отриманні товару", error = ex.Message });
+                }
             }
-
             [HttpPost]
             public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto productDto)
             {
-                var product = await _productService.AddProductAsync(productDto);
-                return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+                try
+                {
+                    if (productDto == null)
+                    {
+                        return BadRequest(new { message = "Невірні дані для створення товару" });
+                    }
+                    if (string.IsNullOrWhiteSpace(productDto.Name))
+                    {
+                        return BadRequest(new { message = "Назва товару не може бути порожньою" });
+                    }
+                    if (productDto.Price < 0)
+                    {
+                        return BadRequest(new { message = "Ціна товару не може бути від'ємною" });
+                    }
+                    if (productDto.Stock < 0)
+                    {
+                        return BadRequest(new { message = "Кількість товару на складі не може бути від'ємною" });
+                    }
+                    if(productDto.CategoryId <= 0)
+                    {
+                        return BadRequest(new { message = "Невірний ID категорії" });
+                    }
+                   
+                    var product = await _productService.AddProductAsync(productDto);
+                    return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = "Помилка при створенні товару", error = ex.Message });
+                }
             }
-
             [HttpPut("{id}")]
             public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto productDto)
             {
+            try
+            {
+                if (productDto == null)
+                {
+                    return BadRequest(new { message = "Невірні дані для оновлення товару" });
+                }
+                if (string.IsNullOrWhiteSpace(productDto.Name))
+                {
+                    return BadRequest(new { message = "Назва товару не може бути порожньою" });
+                }
+                if (productDto.Price < 0)
+                {
+                    return BadRequest(new { message = "Ціна товару не може бути від'ємною" });
+                }
+                if (productDto.Stock < 0)
+                {
+                    return BadRequest(new { message = "Кількість товару на складі не може бути від'ємною" });
+                }
                 var product = await _productService.UpdateProductAsync(id, productDto);
                 if (product == null)
                 {
@@ -58,16 +119,30 @@ namespace api.Controllers
                 }
                 return Ok(product);
             }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = "Помилка при оновленні товару", error = ex.Message });
+                }
+                
+            }
 
             [HttpDelete("{id}")]
             public async Task<IActionResult> DeleteProduct(int id)
             {
-                var result = await _productService.DeleteProductAsync(id);
-                if (!result)
+                try
                 {
-                    return NotFound();
+                    var result = await _productService.DeleteProductAsync(id);
+                    if (!result)
+                    {
+                        return NotFound( new { message = "Товар не знайдено для видалення" });
+                    }
+                    return Ok(new { message = "Товар успішно видалено" });
                 }
-                return NoContent();
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = "Помилка при видаленні товару", error = ex.Message });
+                }       
+                
             }
             //SEARCH
                 // GET: api/products/filter

@@ -55,5 +55,10 @@ namespace api.Repository
             await _context.SaveChangesAsync();
             return model;
         }
+        public async Task<bool> isUserExists(string userName, string email)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.UserName == userName || a.Email == email);
+            return account != null;
+        }
     }
 }

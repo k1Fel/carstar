@@ -35,6 +35,27 @@ namespace api.Controllers
             }
             try
             {
+                if (model.Password == null || model.Password.Length < 6)
+                {
+                    return BadRequest(new { message = "Пароль повинен містити не менше 6 символів" });
+                }
+                if (string.IsNullOrEmpty(model.Email) || !model.Email.Contains("@"))
+                {
+                    return BadRequest(new { message = "Невірний формат email" });
+                }
+                if (string.IsNullOrEmpty(model.UserName))
+                {
+                    return BadRequest(new { message = "Ім'я користувача не може бути порожнім" });
+                }
+                if (await _accountService.isUserExists(model.UserName, model.Email))
+                {
+                    return BadRequest(new { message = "Користувач з таким ім'ям або email вже існує" });
+                }
+                if (await _accountService.isEmailExists(model.Email))
+                {
+                    return BadRequest(new { message = "Користувач з таким email вже існує" });
+                }
+            
                 var account = await _accountService.Register(model);
                 
                 var token = _jwtService.GenerateToken(account);

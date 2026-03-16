@@ -38,6 +38,9 @@ namespace api.Services
             var account = model.RegisterToModel();
             return await _accountRepository.Register(account);
         }
-
+        public async Task<bool> isUserExists(string userName, string email)
+        {
+            return await _accountRepository.isUserExists(userName, email);
+        }
     }
 }

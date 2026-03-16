@@ -29,6 +29,18 @@ namespace api.Controllers
                 {
                     return NotFound();
                 }
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
+                if (cart.CartItems == null || !cart.CartItems.Any())
+                {
+                    return NotFound(new { message = "Кошик порожній" });
+                }
+                if (cart.CartItems.Any(ci => ci.Product == null))
+                {
+                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
+                }
                 return Ok(cart.ToCartResponseDto());
             }
             catch (Exception ex)
@@ -42,6 +54,30 @@ namespace api.Controllers
             try
             {
                 var cart = await _cartService.AddToCartAsync(accountId, request.ProductId, request.Quantity);
+                if (cart == null)
+                {
+                    return NotFound();
+                }
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
+                if (request.Quantity <= 0)
+                {
+                    return BadRequest(new { message = "Кількість повинна бути більше нуля" });
+                }
+                if (cart.CartItems == null || !cart.CartItems.Any())
+                {
+                    return NotFound(new { message = "Кошик порожній" });
+                }
+                if (cart.CartItems.Any(ci => ci.Product == null))
+                {
+                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
+                }
+                if (cart.CartItems.Any(ci => ci.Quantity <= 0))
+                {
+                    return BadRequest(new { message = "Кількість товару у кошику повинна бути більше нуля" });
+                }
                 return Ok(cart.ToCartResponseDto());
             }
             catch (Exception ex)
@@ -55,6 +91,26 @@ namespace api.Controllers
             try
             {
                 var cart = await _cartService.UpdateCartItemAsync(accountId, request.CartItemId, request.Quantity);
+                if (cart == null)
+                {
+                    return NotFound(new { message = "Кошик або товар не знайдено" });
+                }
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
+                if (request.Quantity <= 0)
+                {
+                    return BadRequest(new { message = "Кількість повинна бути більше нуля" });
+                }
+                if (cart.CartItems == null || !cart.CartItems.Any())
+                {
+                    return NotFound(new { message = "Кошик порожній" });
+                }
+                if (cart.CartItems.Any(ci => ci.Product == null))
+                {
+                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
+                }
                 return Ok(cart.ToCartResponseDto());
             }
             catch (Exception ex)
@@ -67,10 +123,26 @@ namespace api.Controllers
         {
             try
             {
-                 var cart = await _cartService.DeleteCartItemAsync(accountId, productId);
+                var cart = await _cartService.DeleteCartItemAsync(accountId, productId);
                 if (cart == null)
                 {
-                    return NotFound();
+                    return NotFound(new { message = "Кошик або товар не знайдено" });
+                }
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
+                if (cart.CartItems == null || !cart.CartItems.Any())
+                {
+                    return NotFound(new { message = "Кошик порожній" });
+                }
+                if (cart.CartItems.Any(ci => ci.Product == null))
+                {
+                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
+                }
+                if (cart.CartItems.Any(ci => ci.Quantity <= 0))
+                {
+                    return BadRequest(new { message = "Кількість товару у кошику повинна бути більше нуля" });
                 }
                 return Ok(cart.ToCartResponseDto());
             }
@@ -86,6 +158,18 @@ namespace api.Controllers
             try
             {
                 var cart = await _cartService.ClearCartAsync(accountId);
+                if (cart == null)
+                {
+                    return NotFound(new { message = "Кошик не знайдено" });
+                }
+                if (accountId <= 0)
+                {
+                    return BadRequest(new { message = "Невірний ID користувача" });
+                }
+                if (cart.CartItems == null || !cart.CartItems.Any())
+                {
+                    return NotFound(new { message = "Кошик порожній" });
+                }
                 return Ok(cart.ToCartResponseDto());
             }
             catch (Exception ex)
