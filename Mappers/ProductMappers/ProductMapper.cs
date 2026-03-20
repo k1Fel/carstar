@@ -15,6 +15,7 @@ namespace api.Mappers.ProductMappers
             return new ProductDto
             {
                 Id = product.Id,
+                ImageUrl = product.ImageUrl,
                 Name = product.Name,
                 Description = product.Description,
                 Price = product.Price,
@@ -29,6 +30,7 @@ namespace api.Mappers.ProductMappers
             return new Product
             {
                 Id = productDto.Id,
+                ImageUrl = productDto.ImageUrl,
                 Name = productDto.Name,
                 Description = productDto.Description,
                 Price = productDto.Price,
@@ -41,6 +43,7 @@ namespace api.Mappers.ProductMappers
             return new Product
             {
                 Id = id,
+                ImageUrl = productDto.ImageUrl,
                 Name = productDto.Name,
                 Description = productDto.Description,
                 Price = productDto.Price,
@@ -53,6 +56,7 @@ namespace api.Mappers.ProductMappers
             return new Product
             {
                 Name = productDto.Name,
+                ImageUrl = productDto.ImageUrl,
                 Description = productDto.Description,
                 Price = productDto.Price,
                 Stock = productDto.Stock,
