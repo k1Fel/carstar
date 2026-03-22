@@ -49,7 +49,13 @@ namespace api.Repository
 
         public async Task<Product?> UpdateProductAsync(int id, Product product)
         {
-            await _context.Products.Where(p => p.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.Name, product.Name));
+            await _context.Products.Where(p => p.Id == id).ExecuteUpdateAsync(p => p
+                .SetProperty(p => p.Name, product.Name)
+                .SetProperty(p => p.ImageUrl, product.ImageUrl)
+                .SetProperty(p => p.Description, product.Description)
+                .SetProperty(p => p.Price, product.Price)
+                .SetProperty(p => p.Stock, product.Stock)
+                .SetProperty(p => p.CategoryId, product.CategoryId));
             return await GetProductByIdAsync(id);
         }
     }
