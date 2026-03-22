@@ -24,11 +24,6 @@ namespace api.Repository
         }
         public async Task<Product> AddProductAsync(Product product)
         {
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == product.CategoryId);
-            if (!categoryExists)
-            {
-                throw new ArgumentException("Invalid Category");
-            }
             await _context.Products.AddAsync(product);
             await _context.SaveChangesAsync();
             return await GetProductByIdAsync(product.Id) ?? product;

@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using api.DTO.Cart;
+using api.Mappers.CartMapper;
 using api.Models;
 using api.Repository.Intrefaces;
 using api.Services.Interfaces;
@@ -17,22 +21,22 @@ namespace api.Services
             _productRepository = productRepository;
         }
 
-
-        public async Task<Cart> AddToCartAsync(int accountId, int productId, int quantity)
+        public async Task<CartResponseDto> AddToCartAsync(int accountId, AddToCartDto addToCartDto)
         {
-
-            var product = await _productRepository.GetProductByIdAsync(productId);
+            // 1️⃣ ПЕРЕВІРКА ІСНУВАННЯ ТОВАРУ
+            var product = await _productRepository.GetProductByIdAsync(addToCartDto.ProductId);
             if (product == null)
             {
-                throw new Exception("Товар не знайдено");
+                throw new ArgumentException($"Товар з ID {addToCartDto.ProductId} не знайдено");
             }
 
-            if (product.Stock < quantity)
+            // 2️⃣ ПЕРЕВІРКА НАЯВНОСТІ НА СКЛАДІ
+            if (product.Stock < addToCartDto.Quantity)
             {
-                throw new Exception($"Недостатня кількість товару. Доступно: {product.Stock}");
+                throw new ArgumentException($"Недостатня кількість товару. Доступно: {product.Stock}");
             }
 
-
+            // 3️⃣ ОТРИМАННЯ АБО СТВОРЕННЯ КОШИКА
             var cart = await _cartRepository.GetCartByAccountId(accountId);
             if (cart == null)
             {
@@ -40,39 +44,46 @@ namespace api.Services
                 cart = await _cartRepository.CreateCart(cart);
             }
 
-            var cartItem = await _cartRepository.GetCartItemAsync(cart.Id, productId);
-            if (cartItem != null)
+            // 4️⃣ ПЕРЕВІРКА ЧИ ТОВАР ВЖЕ Є В КОШИКУ
+            var existingCartItem = await _cartRepository.GetCartItemAsync(cart.Id, addToCartDto.ProductId);
+            
+            if (existingCartItem != null)
             {
-  
-                if (product.Stock < cartItem.Quantity + quantity)
+                // ОНОВЛЮЄМО КІЛЬКІСТЬ
+                int newQuantity = existingCartItem.Quantity + addToCartDto.Quantity;
+                
+                if (product.Stock < newQuantity)
                 {
-                    throw new Exception($"Недостатня кількість товару. Доступно: {product.Stock}");
+                    throw new ArgumentException($"Недостатня кількість товару. Доступно: {product.Stock}");
                 }
                 
-                cartItem.Quantity += quantity;
-                await _cartRepository.UpdateCartItemAsync(cartItem);
+                existingCartItem.Quantity = newQuantity;
+                await _cartRepository.UpdateCartItemAsync(existingCartItem);
             }
             else
             {
-    
-                cartItem = new CartItem
-                {
-                    CartId = cart.Id,
-                    ProductId = productId,
-                    Quantity = quantity
-                };
+                // ДОДАЄМО НОВИЙ ТОВАР
+                var cartItem = addToCartDto.ToCartItem(cart.Id);
                 await _cartRepository.AddCartItemAsync(cartItem);
             }
             
-            // Повертаємо оновлений кошик
-            return await _cartRepository.GetCartByAccountId(accountId) ?? cart;
+            // 5️⃣ ОТРИМУЄМО ОНОВЛЕНИЙ КОШИК І ПЕРЕТВОРЮЄМО В DTO
+            var updatedCart = await _cartRepository.GetCartByAccountId(accountId);
+            
+            if (updatedCart == null)
+            {
+                throw new InvalidOperationException("Помилка при отриманні оновленого кошика");
+            }
+
+            return updatedCart.ToCartResponseDto();
         }
 
-        public async Task<Cart?> GetCartAsync(int accountId)
+        // ✅ ПОВЕРТАЄ CartResponseDto
+        public async Task<CartResponseDto> GetCartAsync(int accountId)
         {
             var cart = await _cartRepository.GetCartByAccountId(accountId);
             
-            // Якщо кошика немає - створюємо порожній
+            // ЯКЩО КОШИКА НЕМАЄ - СТВОРЮЄМО ПОРОЖНІЙ
             if (cart == null)
             {
                 cart = new Cart 
@@ -80,79 +91,130 @@ namespace api.Services
                     AccountId = accountId,
                     CartItems = new List<CartItem>()
                 };
+                cart = await _cartRepository.CreateCart(cart);
             }
             
-            return cart;
+            // MAPPER В СЕРВІСІ
+            return cart.ToCartResponseDto();
         }
 
-
-        public async Task<Cart> UpdateCartItemAsync(int accountId, int cartItemId, int quantity)
+        // ✅ ПОВЕРТАЄ CartResponseDto
+        public async Task<CartResponseDto> UpdateCartItemAsync(int accountId, UpdateCartItemDto updateCartItemDto)
         {
+            // 1️⃣ ПЕРЕВІРКА ІСНУВАННЯ КОШИКА
             var cart = await _cartRepository.GetCartByAccountId(accountId);
             if (cart == null)
             {
-                throw new Exception("Кошик не знайдено");
+                throw new ArgumentException("Кошик не знайдено");
             }
 
-  
-            var cartItem = await _cartRepository.GetCartItemByIdAsync(cartItemId);
+            // 2️⃣ ПЕРЕВІРКА ІСНУВАННЯ ТОВАРУ В КОШИКУ
+            var cartItem = await _cartRepository.GetCartItemByIdAsync(updateCartItemDto.CartItemId);
             
-            // Перевіряємо що CartItem існує і належить цьому кошику
             if (cartItem == null || cartItem.CartId != cart.Id)
             {
-                throw new Exception("Товар в кошику не знайдено або не належить цьому користувачу");
+                throw new ArgumentException("Товар в кошику не знайдено або не належить цьому користувачу");
             }
 
-
-            if (quantity <= 0)
+            // 3️⃣ ЯКЩО КІЛЬКІСТЬ 0 АБО МЕНШЕ - ВИДАЛЯЄМО
+            if (updateCartItemDto.Quantity <= 0)
             {
                 await _cartRepository.DeleteCartItemAsync(cartItem.Id);
             }
             else
             {
-                // Перевірка Stock
+                // 4️⃣ ПЕРЕВІРКА НАЯВНОСТІ НА СКЛАДІ
                 var product = await _productRepository.GetProductByIdAsync(cartItem.ProductId);
-                if (product != null && product.Stock < quantity)
+                if (product == null)
                 {
-                    throw new Exception($"Недостатня кількість товару. Доступно: {product.Stock}");
+                    throw new ArgumentException($"Товар з ID {cartItem.ProductId} не знайдено");
                 }
 
-                cartItem.Quantity = quantity;
+                if (product.Stock < updateCartItemDto.Quantity)
+                {
+                    throw new ArgumentException($"Недостатня кількість товару. Доступно: {product.Stock}");
+                }
+
+                // 5️⃣ ОНОВЛЮЄМО КІЛЬКІСТЬ
+                cartItem.Quantity = updateCartItemDto.Quantity;
                 await _cartRepository.UpdateCartItemAsync(cartItem);
             }
             
-            return await _cartRepository.GetCartByAccountId(accountId) ?? cart;
+            // 6️⃣ ПОВЕРТАЄМО ОНОВЛЕНИЙ КОШИК
+            var updatedCart = await _cartRepository.GetCartByAccountId(accountId);
+            
+            if (updatedCart == null)
+            {
+                throw new InvalidOperationException("Помилка при отриманні оновленого кошика");
+            }
+
+            return updatedCart.ToCartResponseDto();
         }
 
-
-        public async Task<Cart?> DeleteCartItemAsync(int accountId, int productId)
+        // ✅ ПОВЕРТАЄ CartResponseDto
+        public async Task<CartResponseDto> DeleteCartItemAsync(int accountId, int cartItemId)
         {
+            // 1️⃣ ПЕРЕВІРКА ІСНУВАННЯ КОШИКА
             var cart = await _cartRepository.GetCartByAccountId(accountId);
             if (cart == null)
             {
-                throw new Exception("Кошик не знайдено");
+                throw new ArgumentException("Кошик не знайдено");
             }
 
-            var cartItem = await _cartRepository.GetCartItemAsync(cart.Id, productId);
-            if (cartItem == null)
+            // 2️⃣ ПЕРЕВІРКА ІСНУВАННЯ ТОВАРУ В КОШИКУ
+            var cartItem = await _cartRepository.GetCartItemByIdAsync(cartItemId);
+            
+            if (cartItem == null || cartItem.CartId != cart.Id)
             {
-                throw new Exception("Товар в кошику не знайдено");
+                throw new ArgumentException("Товар в кошику не знайдено або не належить цьому користувачу");
             }
 
+            // 3️⃣ ВИДАЛЕННЯ
             await _cartRepository.DeleteCartItemAsync(cartItem.Id);
-            return await _cartRepository.GetCartByAccountId(accountId);
+            
+            // 4️⃣ ПОВЕРТАЄМО ОНОВЛЕНИЙ КОШИК
+            var updatedCart = await _cartRepository.GetCartByAccountId(accountId);
+            
+            if (updatedCart == null)
+            {
+                // Якщо кошик порожній після видалення - створюємо порожній DTO
+                return new Cart 
+                { 
+                    AccountId = accountId,
+                    CartItems = new List<CartItem>()
+                }.ToCartResponseDto();
+            }
+
+            return updatedCart.ToCartResponseDto();
         }
 
-
-        public async Task<Cart> ClearCartAsync(int accountId)
+        // ✅ ПОВЕРТАЄ CartResponseDto
+        public async Task<CartResponseDto> ClearCartAsync(int accountId)
         {
+            // 1️⃣ ПЕРЕВІРКА ІСНУВАННЯ КОШИКА
             var cart = await _cartRepository.GetCartByAccountId(accountId);
             if (cart == null)
             {
-                throw new Exception("Кошик не знайдено");
+                throw new ArgumentException("Кошик не знайдено");
             }
 
-            return await _cartRepository.ClearCartAsync(cart.Id);
+            // 2️⃣ ОЧИЩЕННЯ
+            await _cartRepository.ClearCartAsync(cart.Id);
+            
+            // 3️⃣ ПОВЕРТАЄМО ПОРОЖНІЙ КОШИК
+            var clearedCart = await _cartRepository.GetCartByAccountId(accountId);
+            
+            if (clearedCart == null)
+            {
+                // Створюємо порожній кошик
+                clearedCart = new Cart 
+                { 
+                    AccountId = accountId,
+                    CartItems = new List<CartItem>()
+                };
+            }
+
+            return clearedCart.ToCartResponseDto();
         }
     }
 }

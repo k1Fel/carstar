@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using api.Models;
+using api.DTO.Cart;
 
 namespace api.Services.Interfaces
 {
     public interface ICartService
     {
-        Task<Cart?> GetCartAsync(int accountId);
-        Task<Cart> AddToCartAsync(int accountId, int productId, int quantity);
-        Task<Cart> UpdateCartItemAsync(int accountId, int productId, int quantity);
-        Task<Cart?> DeleteCartItemAsync(int accountId, int productId);
-        Task<Cart> ClearCartAsync(int accountId);
+        Task<CartResponseDto> AddToCartAsync(int accountId, AddToCartDto addToCartDto); 
+        Task<CartResponseDto> GetCartAsync(int accountId);
+        Task<CartResponseDto> UpdateCartItemAsync(int accountId, UpdateCartItemDto updateCartItemDto); 
+        Task<CartResponseDto> DeleteCartItemAsync(int accountId, int cartItemId);
+        Task<CartResponseDto> ClearCartAsync(int accountId);
     }
 }

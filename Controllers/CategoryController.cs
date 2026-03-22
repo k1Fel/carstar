@@ -23,14 +23,6 @@ namespace api.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(createCategoryDto.name))
-                {
-                    return BadRequest(new { message = "Назва категорії не може бути порожньою" });
-                }
-                if(await _categoryService.CategoryExists(createCategoryDto.name) != null)
-                {
-                    return BadRequest(new { message = "Категорія з такою назвою вже існує" });
-                }
                 var category = await _categoryService.CreateCategory(createCategoryDto);
                 return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
             }
@@ -44,16 +36,8 @@ namespace api.Controllers
         {
             try
             {
-            if (id <= 0)
-            {
-                return BadRequest(new { message = "Невірний ID категорії" });
-            }
             var category = await _categoryService.GetCategoryById(id);
-            if (category == null)
-            {
-                return NotFound(new { message = "Категорія не знайдена" });
-            }
-            return Ok(category.ToCategoryResponseDto());
+            return Ok(category);
             }
             catch (Exception ex)
             {
@@ -66,12 +50,7 @@ namespace api.Controllers
             try
             {
                 var categories = await _categoryService.GetAllCategories();
-                if (!categories.Any())
-                {
-                    return NotFound(new { message = "Категорії не знайдено" });
-                }   
-                var response = categories.Select(c => c.ToCategoryResponseDto());
-                return Ok(response);
+                return Ok(categories);
             }
             catch (Exception ex)
             {
@@ -84,10 +63,6 @@ namespace api.Controllers
         {
             try{
                 var category = await _categoryService.UpdateCategory(id, updateCategoryDto);
-                if (category == null)
-                {
-                    return NotFound(new { message = "Категорія не знайдена" });
-                }
                 return Ok(category);
             }
             catch (Exception ex)
@@ -98,12 +73,19 @@ namespace api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var result = await _categoryService.DeleteCategory(id);
-            if (!result)
+            try
             {
-                return NotFound(new { message = "Категорія не знайдена" });
+                var result = await _categoryService.DeleteCategory(id);
+                if (!result)
+                {
+                    return NotFound(new { message = "Категорія не знайдена" });
+                }
+                return Ok(new { message = "Категорія успішно видалена" });
             }
-            return Ok(new { message = "Категорія успішно видалена" });
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Помилка при видаленні категорії", error = ex.Message });
+            }
         }
     }
 }

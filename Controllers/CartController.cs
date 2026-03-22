@@ -1,180 +1,145 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using api.DTO.Cart;
-using api.Mappers.CartMapper;
 using api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 
 namespace api.Controllers
 {
     [ApiController]
     [Route("api/cart")]
+    [Authorize] // Тільки авторизовані користувачі
     public class CartController : ControllerBase
     {
         private readonly ICartService _cartService;
+
         public CartController(ICartService cartService)
         {
             _cartService = cartService;
         }
-        [HttpGet("{accountId}")]
-        public async Task<IActionResult> GetCart(int accountId)
-        {
-            try
-            {
-                var cart = await _cartService.GetCartAsync(accountId);
-                if (cart == null)
-                {
-                    return NotFound();
-                }
-                if (accountId <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID користувача" });
-                }
-                if (cart.CartItems == null || !cart.CartItems.Any())
-                {
-                    return NotFound(new { message = "Кошик порожній" });
-                }
-                if (cart.CartItems.Any(ci => ci.Product == null))
-                {
-                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
-                }
-                return Ok(cart.ToCartResponseDto());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }       
-        }
-        [HttpPost("{accountId}/add")]
-        public async Task<IActionResult> AddToCart(int accountId, [FromBody] AddToCartDto request)
-        {
-            try
-            {
-                var cart = await _cartService.AddToCartAsync(accountId, request.ProductId, request.Quantity);
-                if (cart == null)
-                {
-                    return NotFound();
-                }
-                if (accountId <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID користувача" });
-                }
-                if (request.Quantity <= 0)
-                {
-                    return BadRequest(new { message = "Кількість повинна бути більше нуля" });
-                }
-                if (cart.CartItems == null || !cart.CartItems.Any())
-                {
-                    return NotFound(new { message = "Кошик порожній" });
-                }
-                if (cart.CartItems.Any(ci => ci.Product == null))
-                {
-                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
-                }
-                if (cart.CartItems.Any(ci => ci.Quantity <= 0))
-                {
-                    return BadRequest(new { message = "Кількість товару у кошику повинна бути більше нуля" });
-                }
-                return Ok(cart.ToCartResponseDto());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }   
-        }
-        [HttpPut("{accountId}/update")]
-        public async Task<IActionResult> UpdateCartItem(int accountId, [FromBody] UpdateCartItemDto request)
-        {
-            try
-            {
-                var cart = await _cartService.UpdateCartItemAsync(accountId, request.CartItemId, request.Quantity);
-                if (cart == null)
-                {
-                    return NotFound(new { message = "Кошик або товар не знайдено" });
-                }
-                if (accountId <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID користувача" });
-                }
-                if (request.Quantity <= 0)
-                {
-                    return BadRequest(new { message = "Кількість повинна бути більше нуля" });
-                }
-                if (cart.CartItems == null || !cart.CartItems.Any())
-                {
-                    return NotFound(new { message = "Кошик порожній" });
-                }
-                if (cart.CartItems.Any(ci => ci.Product == null))
-                {
-                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
-                }
-                return Ok(cart.ToCartResponseDto());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-        [HttpDelete("{accountId}/delete/{productId}")]
-        public async Task<IActionResult> DeleteCartItem(int accountId, int productId)
-        {
-            try
-            {
-                var cart = await _cartService.DeleteCartItemAsync(accountId, productId);
-                if (cart == null)
-                {
-                    return NotFound(new { message = "Кошик або товар не знайдено" });
-                }
-                if (accountId <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID користувача" });
-                }
-                if (cart.CartItems == null || !cart.CartItems.Any())
-                {
-                    return NotFound(new { message = "Кошик порожній" });
-                }
-                if (cart.CartItems.Any(ci => ci.Product == null))
-                {
-                    return NotFound(new { message = "Один або кілька товарів у кошику не знайдені" });
-                }
-                if (cart.CartItems.Any(ci => ci.Quantity <= 0))
-                {
-                    return BadRequest(new { message = "Кількість товару у кошику повинна бути більше нуля" });
-                }
-                return Ok(cart.ToCartResponseDto());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
 
+        private int GetAccountId()
+        {
+            var accountIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim) || !int.TryParse(accountIdClaim, out int accountId))
+            {
+                throw new UnauthorizedAccessException("Невірний токен");
+            }
+            return accountId;
         }
-        [HttpDelete("{accountId}/clear")]
-        public async Task<IActionResult> ClearCart(int accountId)
+
+        [HttpPost]
+        public async Task<IActionResult> AddToCart([FromBody] AddToCartDto addToCartDto)
         {
             try
             {
-                var cart = await _cartService.ClearCartAsync(accountId);
-                if (cart == null)
-                {
-                    return NotFound(new { message = "Кошик не знайдено" });
-                }
-                if (accountId <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID користувача" });
-                }
-                if (cart.CartItems == null || !cart.CartItems.Any())
-                {
-                    return NotFound(new { message = "Кошик порожній" });
-                }
-                return Ok(cart.ToCartResponseDto());
+                int accountId = GetAccountId();
+                var cart = await _cartService.AddToCartAsync(accountId, addToCartDto);
+                return Ok(cart);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCart()
+        {
+            try
+            {
+                int accountId = GetAccountId();
+                var cart = await _cartService.GetCartAsync(accountId);
+                return Ok(cart);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
+            }
+        }
+
+      
+        [HttpPut]
+        public async Task<IActionResult> UpdateCartItem([FromBody] UpdateCartItemDto updateCartItemDto)
+        {
+            try
+            {
+                int accountId = GetAccountId();
+                var cart = await _cartService.UpdateCartItemAsync(accountId, updateCartItemDto);
+                return Ok(cart);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
+            }
+        }
+
+       
+        [HttpDelete("{cartItemId:int}")]
+        public async Task<IActionResult> DeleteCartItem(int cartItemId)
+        {
+            try
+            {
+                int accountId = GetAccountId();
+                var cart = await _cartService.DeleteCartItemAsync(accountId, cartItemId);
+                return Ok(cart);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
+            }
+        }
+
+        [HttpDelete("clear")]
+        public async Task<IActionResult> ClearCart()
+        {
+            try
+            {
+                int accountId = GetAccountId();
+                var cart = await _cartService.ClearCartAsync(accountId);
+                return Ok(new { message = "Кошик успішно очищено", cart });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }
         }
     }

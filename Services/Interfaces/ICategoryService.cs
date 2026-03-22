@@ -8,11 +8,10 @@ namespace api.Services.Interfaces
 {
     public interface ICategoryService
     {
-        Task<Category> CreateCategory(CreateCategoryDto createCategoryDto);
-        Task<Category?> GetCategoryById(int id);
-        Task<List<Category>> GetAllCategories();
-        Task<Category?> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto);
+        Task<CategoryDtoResponse> CreateCategory(CreateCategoryDto createCategoryDto);
+        Task<CategoryDtoResponse?> GetCategoryById(int id);
+        Task<List<CategoryDtoResponse>> GetAllCategories();
+        Task<CategoryDtoResponse?> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto);
         Task<bool> DeleteCategory(int id);
-        Task<Category?> CategoryExists(string name);
     }
 }
