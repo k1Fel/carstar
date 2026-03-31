@@ -1,15 +1,16 @@
 using System;
-using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using api.DTO.Order;
 using api.Services.Interfaces;
-using api.Mappers.OrderMappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
 {
     [ApiController]
     [Route("api/orders")]
+    [Authorize]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -19,155 +20,157 @@ namespace api.Controllers
             _orderService = orderService;
         }
 
-        // POST: api/orders
-        // Створити замовлення з кошика
-        [HttpPost]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
+        private int GetAccountId()
         {
-            try
+            var accountIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim) || !int.TryParse(accountIdClaim, out int accountId))
             {
-                if (dto == null || dto.AccountId <= 0 || string.IsNullOrEmpty(dto.ShippingAddress))
-                {
-                    return BadRequest(new { message = "Невірні дані для створення замовлення" });
-                }
-                if(dto.TotalAmount <= 0)
-                {
-                    return BadRequest(new { message = "Загальна сума замовлення повинна бути більше нуля" });
-                }
-                
-                var order = await _orderService.CreateOrderFromCartAsync(
-                    dto.AccountId,
-                    dto.ShippingAddress
-                );
-
-                return Ok(order.ToOrderResponseDto());
+                throw new UnauthorizedAccessException("Невірний токен");
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return accountId;
         }
 
-        // GET: api/orders/{id}?accountId={accountId}
-        // Отримати замовлення за ID
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrder(int id, [FromQuery] int accountId)
+        [HttpPost]
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createOrderDto)
         {
             try
             {
-                var order = await _orderService.GetOrderByIdAsync(id, accountId);
-                if (id <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID замовлення" });
-                }
-                if (accountId <= 0)
-                {
-                    return BadRequest(new { message = "Невірний ID користувача" });
-                }
-                if (order == null)
-                {
-                    return NotFound(new { message = "Замовлення не знайдено" });
-                }
-                
-                return Ok(order.ToOrderResponseDto());
+                int accountId = GetAccountId();
+
+                var order = await _orderService.CreateOrderFromCartAsync(accountId, createOrderDto);
+
+                return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message);
+                return Unauthorized(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }
         }
 
-        // GET: api/orders/user/{accountId}
-        // Отримати всі замовлення користувача
-        [HttpGet("user/{accountId}")]
-        public async Task<IActionResult> GetUserOrders(int accountId)
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetOrder(int id)
         {
             try
             {
-                var orders = await _orderService.GetOrdersByAccountIdAsync(accountId);
-                if (accountId <= 0)
+                int accountId = GetAccountId();
+
+                var order = await _orderService.GetOrderByIdAsync(id, accountId);
+
+                if (order == null)
                 {
-                    return BadRequest(new { message = "Невірний ID користувача" });
+                    return NotFound(new { message = $"Замовлення з ID {id} не знайдено" });
                 }
-                var ordersDto = orders.Select(o => o.ToOrderResponseDto()).ToList();
-                return Ok(ordersDto);
+
+                return Ok(order);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(); 
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }
         }
 
-        // GET: api/orders/all
-        // Отримати всі замовлення (для адміна)
+        [HttpGet]
+        public async Task<IActionResult> GetMyOrders()
+        {
+            try
+            {
+                int accountId = GetAccountId();
+
+                var orders = await _orderService.GetOrdersByAccountIdAsync(accountId);
+
+                return Ok(orders);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
+            }
+        }
+
         [HttpGet("all")]
+        [Authorize]
         public async Task<IActionResult> GetAllOrders()
         {
             try
             {
                 var orders = await _orderService.GetAllOrdersAsync();
-                if (orders == null || !orders.Any())
-                {
-                    return NotFound(new { message = "Замовлення не знайдено" });
-                }
-               
-                
-                var ordersDto = orders.Select(o => o.ToOrderResponseDto()).ToList();
-                return Ok(ordersDto);
+
+                return Ok(orders);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }
         }
 
-        // PUT: api/orders/{id}/status
-        // Оновити статус замовлення (адмін)
-        [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusDto dto)
+        [HttpPatch("{id:int}/status")]
+        [Authorize]
+        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusDto updateStatusDto)
         {
             try
             {
-                var order = await _orderService.UpdateOrderStatusAsync(id, dto.Status);
+                var order = await _orderService.UpdateOrderStatusAsync(id, updateStatusDto.Status);
+
                 if (order == null)
                 {
-                    return NotFound(new { message = "Замовлення не знайдено" });
+                    return NotFound(new { message = $"Замовлення з ID {id} не знайдено" });
                 }
 
-                return Ok(order.ToOrderResponseDto());
+                return Ok(order);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
+            }
         }
 
-        // DELETE: api/orders/{id}/cancel?accountId={accountId}
-        // Скасувати замовлення (користувач)
-        [HttpDelete("{id}/cancel")]
-        public async Task<IActionResult> CancelOrder(int id, [FromQuery] int accountId)
+        [HttpDelete("{id:int}/cancel")]
+        public async Task<IActionResult> CancelOrder(int id)
         {
             try
             {
-                var result = await _orderService.CancelOrderAsync(id, accountId);
+               
+                int accountId = GetAccountId();
+
+                bool result = await _orderService.CancelOrderAsync(id, accountId);
+
                 if (!result)
                 {
-                    return NotFound(new { message = "Замовлення не знайдено" });
+                    return NotFound(new { message = $"Замовлення з ID {id} не знайдено" });
                 }
 
                 return Ok(new { message = "Замовлення успішно скасовано" });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }
         }
     }
