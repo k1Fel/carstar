@@ -1,0 +1,138 @@
+.card {
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: background var(--tr), border-color var(--tr);
+}
+.card:hover {
+  background: var(--s2);
+  border-color: var(--b2);
+}
+
+.imgWrap {
+  background: var(--s2);
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--b1);
+  position: relative;
+  color: var(--t1);
+  overflow: hidden;
+}
+
+.productImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .3s ease;
+}
+.card:hover .productImg {
+  transform: scale(1.04);
+}
+
+.fallbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 4px 9px;
+  font-family: var(--fm);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.tagOut { background: var(--s4); color: var(--t3); }
+
+.body {
+  padding: 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cat {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--t4);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t1);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.desc {
+  font-size: 11px;
+  color: var(--t3);
+  line-height: 1.5;
+  margin-bottom: 14px;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.stock {
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+}
+.stock_ok  { color: var(--grn); }
+.stock_low { color: var(--ylw); }
+.stock_out { color: var(--t4); }
+
+.price {
+  font-family: var(--fm);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--t1);
+}
+
+.addBtn {
+  width: 30px;
+  height: 30px;
+  background: var(--s3);
+  border: 1px solid var(--b3);
+  color: var(--t2);
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--tr);
+  flex-shrink: 0;
+}
+.addBtn:hover:not(:disabled) {
+  background: var(--acc);
+  color: var(--bg);
+  border-color: var(--acc);
+}
+.addBtn:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}

@@ -1,0 +1,261 @@
+.hero {
+  border-bottom: 1px solid var(--b1);
+  overflow: hidden;
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  /* padding тільки зліва — права колонка до краю */
+  padding: 0 0 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 480px;
+  /* рівна висота у обох колонок */
+  align-items: stretch;
+}
+
+/* Left */
+.left {
+  padding: 60px 48px 60px 0;
+  border-right: 1px solid var(--b1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--t4);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.eyebrowLine {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--t4);
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--fc);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: .02em;
+  color: var(--acc);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.title em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--t2);
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--t3);
+  line-height: 1.7;
+  margin-bottom: 32px;
+  max-width: 360px;
+}
+
+.btns {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.btnPrim {
+  background: var(--acc);
+  color: var(--bg);
+  border: none;
+  padding: 12px 24px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  transition: opacity var(--tr);
+}
+.btnPrim:hover { opacity: .85; }
+
+.btnSec {
+  background: none;
+  color: var(--t2);
+  border: 1px solid var(--b3);
+  padding: 12px 24px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: all var(--tr);
+}
+.btnSec:hover { color: var(--t1); border-color: var(--t4); }
+
+/* Stats */
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.statVal {
+  font-family: var(--fm);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--t1);
+}
+.statLabel {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--t4);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.statSep {
+  width: 1px;
+  height: 32px;
+  background: var(--b2);
+}
+
+/* Right */
+.right {
+  /* padding прибраний — картинка займає весь блок */
+  display: flex;
+  align-items: stretch;
+  background: var(--s1);
+  overflow: hidden;
+}
+
+.visual {
+  position: relative;
+  width: 100%;
+  /* висота = висота лівої колонки */
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Car photo — заповнює весь правий блок */
+.carImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  /* легкий fade-in при завантаженні */
+  animation: fadeIn .6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(1.03); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Темний градієнт знизу і зліва — для читабельності тегів */
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(8,8,8,.75) 0%, transparent 45%),
+    linear-gradient(to right, rgba(8,8,8,.35) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.visualGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.visualTag {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  font-family: var(--fm);
+  font-size: 10px;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  background: rgba(8,8,8,.6);
+  border: 1px solid rgba(255,255,255,.1);
+  padding: 5px 12px;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+}
+
+.visualTagRight {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-family: var(--fc);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,.4);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  background: rgba(8,8,8,.5);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 5px 12px;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+}
+
+/* Ticker */
+.ticker {
+  border-top: 1px solid var(--b1);
+  overflow: hidden;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  background: var(--s1);
+  width: 100%;
+}
+
+.tickerTrack {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+  animation: scroll 24s linear infinite;
+  will-change: transform;
+}
+
+@keyframes scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.tickerItem {
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--t4);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+.tickerDot {
+  margin-left: 20px;
+  color: var(--b3);
+}

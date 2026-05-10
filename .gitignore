@@ -1,0 +1,22 @@
+﻿# Backend
+api/bin/
+api/obj/
+api/appsettings.json
+api/wwwroot/uploads/**
+!api/wwwroot/uploads/products/.gitkeep
+api/.vs/
+api/.vscode/
+api/*.user
+api/*.suo
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
