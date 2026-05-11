@@ -5,6 +5,7 @@
 import type { ProductDto } from '../types';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../hooks/useFavorites';
 import styles from './ProductCard.module.css';
 
 interface ProductCardProps {
@@ -16,7 +17,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onAuthRequired, onClick }: ProductCardProps) {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
-
+  const { toggleFavorite, isFavorite } = useFavorites();
   const stockStatus =
     product.stock === 0 ? 'out' :
     product.stock <= 10  ? 'low' : 'ok';
@@ -31,11 +32,31 @@ export default function ProductCard({ product, onAuthRequired, onClick }: Produc
       alert(err.message);
     }
   };
-
+const favorite = isFavorite(product.id);
   return (
     <div className={styles.card} onClick={() => onClick(product)}>
       {/* Image */}
       <div className={styles.imgWrap}>
+        <button
+  onClick={(e) => {
+    e.stopPropagation();
+    toggleFavorite(product.id);
+  }}
+  style={{
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    background: 'black',
+    border: 'none',
+    borderRadius: '50%',
+    width: 36,
+    height: 36,
+    cursor: 'pointer',
+    color: favorite ? 'red' : 'white',
+  }}
+>
+  ♥
+</button>
         {product.imageUrl ? (
   <img
     src={product.imageUrl}

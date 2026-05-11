@@ -13,10 +13,10 @@ import CartSidebar from './components/CartSidebar';
 import CatalogPage from './pages/CatalogPage';
 import ProductPage from './pages/ProductPage';
 import ProfilePage from './pages/ProfilePage';
-
+import FavoritesPage from './pages/FavoritesPage';
 import './styles/tokens.css';
 
-type Page = 'home' | 'catalog' | 'product' | 'profile' | 'orders' | 'brands' | 'selector' | 'about';
+type Page = 'home' | 'catalog' | 'product' | 'profile' | 'orders'  | 'selector' | 'favorites';
 
 export default function App() {
   const [page, setPage]         = useState<Page>('home');
@@ -68,11 +68,15 @@ export default function App() {
 
             {(page === 'profile' || page === 'orders') && <ProfilePage />}
 
-            {(page === 'brands' || page === 'selector' || page === 'about') && (
+            {(page === 'selector') && (
               <PlaceholderPage title={
-                page === 'brands'   ? 'Бренди' :
-                page === 'selector' ? 'Підбір за авто' : 'Про нас'
-              } />
+                page === 'selector' ? 'Підбір за авто' : 'Улюблені'} />
+            )}
+            {page === 'favorites' && (
+              <FavoritesPage
+                onAuthRequired={() => setAuthOpen(true)}
+                onProductClick={goProduct}
+              />
             )}
           </main>
 

@@ -22,9 +22,7 @@ export default function Header({
 
   const links = [
     { id: 'catalog',  label: 'Каталог' },
-    { id: 'brands',   label: 'Бренди' },
     { id: 'selector', label: 'Підбір за авто' },
-    { id: 'about',    label: 'Про нас' },
   ];
 
   return (
@@ -54,13 +52,20 @@ export default function Header({
 
         {/* Right icons */}
         <div className={styles.right}>
-          <button className={styles.iconBtn} title="Пошук">
-            <SearchIcon />
+          <button
+              className={styles.iconBtn}
+              title="Пошук"
+              onClick={() => onNavigate('catalog')}
+            >
           </button>
 
-          <button className={styles.iconBtn} title="Вішліст">
-            <HeartIcon />
-          </button>
+          <button
+          className={styles.iconBtn}
+          title="Уподобані"
+          onClick={() => onNavigate('favorites')}
+        >
+          <HeartIcon />
+        </button>
 
           <button
             className={styles.iconBtn}
