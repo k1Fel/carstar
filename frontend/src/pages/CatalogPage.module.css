@@ -29,15 +29,17 @@
 .sidebarClosed { width: 42px; overflow: hidden; }
 
 .sidebarHeader {
+  height: 44px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 14px 10px;
   border-bottom: 1px solid var(--b1);
   position: sticky;
   top: 0;
   background: var(--s1);
   z-index: 1;
+  flex-shrink: 0;
 }
 
 .sidebarTitle {
@@ -128,12 +130,15 @@
   border-left: 2px solid transparent;
   transition: all var(--tr);
   min-height: 32px;
+  padding-right: 10px; /* відступ щоб count не впирався в край */
 }
 .catItem:hover { background: var(--s2); }
 .catItemActive {
   background: var(--s2);
   border-left-color: var(--acc);
 }
+
+
 
 /* Кнопка розгортання ▸ / ▾ */
 .catExpand {
@@ -180,7 +185,10 @@
   font-size: 9px;
   color: var(--t4);
   flex-shrink: 0;
-  padding-right: 8px;
+  margin-left: auto; /* притискає до правого краю але з відступом */
+  padding-right: 4px;
+  min-width: 20px;
+  text-align: right;
 }
 .catItemActive .catCount { color: var(--t3); }
 
@@ -270,14 +278,18 @@
 
 /* Top bar */
 .topBar {
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 0 16px;
   background: var(--s1);
   border-bottom: 1px solid var(--b1);
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .resultsInfo {
@@ -295,6 +307,7 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Active filter chips */
@@ -360,3 +373,29 @@
   transition: all var(--tr);
 }
 .noResultsBtn:hover { color: var(--t1); border-color: var(--t4); }
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid var(--b2);
+  color: var(--t3);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-family: var(--fm);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: all var(--tr);
+  flex-shrink: 0;
+}
+.backBtn:hover {
+  color: var(--t1);
+  border-color: var(--b3);
+}

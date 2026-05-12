@@ -39,7 +39,6 @@ export interface CategoryDtoResponse {
 export interface ProductCategoryDto {
   id: number;
   name: string;
-  type: string; // "part_type", "brand", "model", "country"
 }
 
 export interface ProductDto {
@@ -84,7 +83,7 @@ export interface UpdateProductDto {
 
 // Filter params → GET /api/products/filter
 export interface ProductFilterParams {
-  categoryId?: number;
+  categoryIds?: number[];
   minPrice?: number;
   maxPrice?: number;
   search?: string;

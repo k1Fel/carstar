@@ -7,13 +7,15 @@ import ProductCard from '../components/ProductCard';
 import { useFavorites } from '../hooks/useFavorites';
 import type { ProductDto } from '../types';
 import styles from './FavoritesPage.module.css';
+import BackButton from '../components/BackButton';
 
 interface Props {
   onAuthRequired: () => void;
   onProductClick: (product: ProductDto) => void;
+  onBack: () => void;
 }
 
-export default function FavoritesPage({ onAuthRequired, onProductClick }: Props) {
+export default function FavoritesPage({ onAuthRequired, onProductClick , onBack}: Props) {
   const { favorites } = useFavorites();
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,7 @@ export default function FavoritesPage({ onAuthRequired, onProductClick }: Props)
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleRow}>
+          <BackButton onClick={onBack} />
           <span className={styles.titleDot} />
           <h1 className={styles.title}>Уподобані</h1>
           {!loading && (

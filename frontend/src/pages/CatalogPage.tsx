@@ -1,27 +1,29 @@
 // ============================================
-// CARSTAR — CatalogPage (Many-to-Many + Tree)
+// CARSTAR — CatalogPage (Multiple Categories)
 // ============================================
 import { useState, useEffect, useCallback } from 'react';
 import type { ProductDto, CategoryDtoResponse } from '../types';
 import { productApi, categoryApi } from '../api';
 import ProductCard from '../components/ProductCard';
+import BackButton from '../components/BackButton';
 import styles from './CatalogPage.module.css';
 
 interface CatalogPageProps {
-  onAuthRequired: () => void;
-  onProductClick: (product: ProductDto) => void;
+    onAuthRequired: () => void;
+    onProductClick: (product: ProductDto) => void;
+    onBack: () => void;
 }
 
 // ===== Рекурсивне дерево категорій =====
 function CategoryTree({
   categories,
-  selectedId,
+  selectedIds,
   onSelect,
   depth = 0,
 }: {
   categories: CategoryDtoResponse[];
-  selectedId?: number;
-  onSelect: (id: number | undefined) => void;
+  selectedIds: number[];
+  onSelect: (id: number) => void;
   depth?: number;
 }) {
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -39,7 +41,7 @@ function CategoryTree({
       {categories.map(cat => {
         const hasChildren = cat.children && cat.children.length > 0;
         const isExpanded = expanded.has(cat.id);
-        const isActive = selectedId === cat.id;
+        const isActive = selectedIds.includes(cat.id);
 
         return (
           <div key={cat.id}>
@@ -62,7 +64,7 @@ function CategoryTree({
               {/* Category name */}
               <button
                 className={styles.catName}
-                onClick={() => onSelect(cat.id === selectedId ? undefined : cat.id)}
+                onClick={() => onSelect(cat.id)}
               >
                 {cat.name}
               </button>
@@ -74,7 +76,7 @@ function CategoryTree({
             {hasChildren && isExpanded && (
               <CategoryTree
                 categories={cat.children!}
-                selectedId={selectedId}
+                selectedIds={selectedIds}
                 onSelect={onSelect}
                 depth={depth + 1}
               />
@@ -87,7 +89,7 @@ function CategoryTree({
 }
 
 // ===== Головний компонент =====
-export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogPageProps) {
+export default function CatalogPage({ onAuthRequired, onProductClick, onBack }: CatalogPageProps) {
   const [products, setProducts]     = useState<ProductDto[]>([]);
   const [categories, setCategories] = useState<CategoryDtoResponse[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -95,7 +97,7 @@ export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogP
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Filters
-  const [categoryId, setCategoryId] = useState<number | undefined>();
+  const [categoryIds, setCategoryIds] = useState<number[]>([]);
   const [search, setSearch]         = useState('');
   const [minPrice, setMinPrice]     = useState('');
   const [maxPrice, setMaxPrice]     = useState('');
@@ -109,13 +111,22 @@ export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogP
       .catch(() => {});
   }, []);
 
+  // Handle category selection (toggle)
+  const handleCategorySelect = (id: number) => {
+    setCategoryIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(x => x !== id)
+        : [...prev, id]
+    );
+  };
+
   // Load products
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const data = await productApi.filter({
-        categoryId,
+        categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
         search:   search || undefined,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
@@ -134,17 +145,17 @@ export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogP
     } finally {
       setLoading(false);
     }
-  }, [categoryId, search, minPrice, maxPrice, inStock, sortBy]);
+  }, [categoryIds, search, minPrice, maxPrice, inStock, sortBy]);
 
   useEffect(() => {
     const t = setTimeout(fetchProducts, 300);
     return () => clearTimeout(t);
   }, [fetchProducts]);
 
-  const hasActiveFilters = !!(categoryId || search || minPrice || maxPrice || inStock);
+  const hasActiveFilters = !!(categoryIds.length > 0 || search || minPrice || maxPrice || inStock);
 
   const resetFilters = () => {
-    setCategoryId(undefined);
+    setCategoryIds([]);
     setSearch('');
     setMinPrice('');
     setMaxPrice('');
@@ -203,14 +214,19 @@ export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogP
 
               {/* Categories tree */}
               <div className={styles.filterSection}>
-                <div className={styles.filterLabel}>Категорія</div>
+                <div className={styles.filterLabel}>
+                  Категорія
+                  {categoryIds.length > 0 && (
+                    <span className={styles.selectedCount}>({categoryIds.length})</span>
+                  )}
+                </div>
                 <div className={styles.catList}>
                   {/* Всі */}
-                  <div className={`${styles.catItem} ${!categoryId ? styles.catItemActive : ''}`}>
+                  <div className={`${styles.catItem} ${categoryIds.length === 0 ? styles.catItemActive : ''}`}>
                     <span className={styles.catExpandPlaceholder} />
                     <button
                       className={styles.catName}
-                      onClick={() => setCategoryId(undefined)}
+                      onClick={() => setCategoryIds([])}
                     >
                       Всі категорії
                     </button>
@@ -221,8 +237,8 @@ export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogP
 
                   <CategoryTree
                     categories={categories}
-                    selectedId={categoryId}
-                    onSelect={setCategoryId}
+                    selectedIds={categoryIds}
+                    onSelect={handleCategorySelect}
                   />
                 </div>
               </div>
@@ -277,24 +293,30 @@ export default function CatalogPage({ onAuthRequired, onProductClick }: CatalogP
 
           {/* Top bar */}
           <div className={styles.topBar}>
-            <div className={styles.resultsInfo}>
-              {loading ? (
-                <span className={styles.loading}>Завантаження...</span>
-              ) : error ? (
-                <span className={styles.errText}>{error}</span>
-              ) : (
-                <span>{products.length} товарів</span>
-              )}
+            <div className={styles.topBarLeft}>
+                <BackButton onClick={onBack} />              
+                <div className={styles.resultsInfo}>
+                {loading ? (
+                  <span className={styles.loading}>Завантаження...</span>
+                ) : error ? (
+                  <span className={styles.errText}>{error}</span>
+                ) : (
+                  <span>{products.length} товарів</span>
+                )}
+              </div>
             </div>
 
             <div className={styles.topBarRight}>
               {/* Active filter chips */}
-              {categoryId && (
-                <span className={styles.chip}>
-                  {findCategoryName(categories, categoryId) ?? `#${categoryId}`}
-                  <button onClick={() => setCategoryId(undefined)}>✕</button>
-                </span>
-              )}
+              {categoryIds.map(id => {
+                const name = findCategoryName(categories, id);
+                return name ? (
+                  <span key={id} className={styles.chip}>
+                    {name}
+                    <button onClick={() => handleCategorySelect(id)}>✕</button>
+                  </span>
+                ) : null;
+              })}
               {search && (
                 <span className={styles.chip}>
                   «{search}»

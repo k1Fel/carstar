@@ -100,7 +100,11 @@ export const productApi = {
 
   filter: (params: ProductFilterParams) => {
     const q = new URLSearchParams();
-    if (params.categoryId !== undefined) q.set('categoryId', String(params.categoryId));
+    if (params.categoryIds && params.categoryIds.length > 0) {
+      params.categoryIds.forEach(id => 
+        q.append('categoryIds', id.toString())
+      );
+    }
     if (params.minPrice   !== undefined) q.set('minPrice',   String(params.minPrice));
     if (params.maxPrice   !== undefined) q.set('maxPrice',   String(params.maxPrice));
     if (params.search)                   q.set('search',     params.search);

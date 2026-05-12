@@ -28,14 +28,32 @@ export default function App() {
     setSelectedProductId(product.id);
     setPage('product');
   };
+  const [history, setHistory] = useState<Page[]>([]);
 
+  // Навігація з запам'ятовуванням попередньої сторінки
+  const navigate = (p: Page) => {
+    setHistory(prev => [...prev, page]); // зберігаємо поточну перед переходом
+    setPage(p);
+  };
+
+  // Назад
+  const goBack = () => {
+  if (history.length === 0) {
+    setPage('catalog');
+    return;
+  }
+
+  const prev = history[history.length - 1];
+  setHistory(h => h.slice(0, -1));
+  setPage(prev);
+};
   return (
     <AuthProvider>
       <CartProvider>
         <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
           <Header
             currentPage={page}
-            onNavigate={(p) => setPage(p as Page)}
+            onNavigate={(p) => navigate(p as Page)}
             onAuthClick={() => setAuthOpen(true)}
             onCartClick={() => setCartOpen(true)}
           />
@@ -47,37 +65,37 @@ export default function App() {
                 <CatalogPage
                   onAuthRequired={() => setAuthOpen(true)}
                   onProductClick={goProduct}
-                />
+                  onBack={goBack}
+                 /> 
               </>
             )}
+              {page === 'catalog' && (
+                <CatalogPage
+                  onBack={goBack}
+                  onAuthRequired={() => setAuthOpen(true)}
+                  onProductClick={goProduct}
+                />
+              )}
 
-            {page === 'catalog' && (
-              <CatalogPage
-                onAuthRequired={() => setAuthOpen(true)}
-                onProductClick={goProduct}
-              />
-            )}
+              {page === 'product' && selectedProductId && (
+                <ProductPage
+                  productId={selectedProductId}
+                  onBack={goBack}
+                  onAuthRequired={() => setAuthOpen(true)}
+                />
+              )}
 
-            {page === 'product' && selectedProductId && (
-              <ProductPage
-                productId={selectedProductId}
-                onBack={() => setPage('catalog')}
-                onAuthRequired={() => setAuthOpen(true)}
-              />
-            )}
+              {(page === 'profile' || page === 'orders') && (
+                <ProfilePage onBack={goBack} />
+              )}
 
-            {(page === 'profile' || page === 'orders') && <ProfilePage />}
-
-            {(page === 'selector') && (
-              <PlaceholderPage title={
-                page === 'selector' ? 'Підбір за авто' : 'Улюблені'} />
-            )}
-            {page === 'favorites' && (
-              <FavoritesPage
-                onAuthRequired={() => setAuthOpen(true)}
-                onProductClick={goProduct}
-              />
-            )}
+              {page === 'favorites' && (
+                <FavoritesPage
+                  onBack={goBack}
+                  onAuthRequired={() => setAuthOpen(true)}
+                  onProductClick={goProduct}
+                />
+)}
           </main>
 
           {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}

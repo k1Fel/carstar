@@ -9,6 +9,7 @@ import type { ResponseOrderDto, OrderStatus } from '../types';
 import { orderApi } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import styles from './ProfilePage.module.css';
+import BackButton from '../components/BackButton';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   Pending:    'Очікує',
@@ -19,8 +20,10 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 type Section = 'profile' | 'orders';
-
-export default function ProfilePage() {
+interface ProfilePageProps {
+  onBack: () => void;
+}
+export default function ProfilePage({ onBack }: ProfilePageProps) {
   const { account, logout } = useAuth();
   const [section, setSection]   = useState<Section>('profile');
   const [orders, setOrders]     = useState<ResponseOrderDto[]>([]);
@@ -51,6 +54,9 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.page}>
+       <div className={styles.pageHeader}>
+          <BackButton onClick={onBack} />
+        </div>
       <div className={styles.layout}>
         {/* Sidebar */}
         <aside className={styles.sidebar}>

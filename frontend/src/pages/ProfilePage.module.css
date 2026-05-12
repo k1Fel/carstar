@@ -238,3 +238,6 @@
   transition: all var(--tr);
 }
 .cancelBtn:hover { border-color: var(--red); color: var(--red); }
+.pageHeader {
+  margin-bottom: 16px;
+}

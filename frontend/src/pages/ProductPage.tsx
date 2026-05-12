@@ -8,6 +8,7 @@ import { productApi } from '../api';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import styles from './ProductPage.module.css';
+import BackButton from '../components/BackButton';
 
 interface ProductPageProps {
   productId: number;
@@ -63,12 +64,11 @@ export default function ProductPage({ productId, onBack, onAuthRequired }: Produ
 
   return (
     <div className={styles.page}>
-      {/* Breadcrumb */}
       <div className={styles.breadcrumb}>
-        <button className={styles.breadLink} onClick={onBack}>Каталог</button>
+        <BackButton onClick={onBack} label="До каталогу" />
         <span className={styles.breadSep}>›</span>
         <span className={styles.breadCurrent}>
-          {product.categories.find(c => c.type === 'part_type')?.name ?? ''}
+          {product.categories.map(c => c.name).join(' · ')}
         </span>
         <span className={styles.breadSep}>›</span>
         <span className={styles.breadCurrent}>{product.name}</span>

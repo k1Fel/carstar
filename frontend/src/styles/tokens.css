@@ -45,7 +45,34 @@
   /* --- Transitions --- */
   --tr: .15s ease;
 }
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
 
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--b3) transparent;
+}
+
+/* Chrome / Safari / Edge */
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--b3);
+  border-radius: 2px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--t4);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
 /* ============================================
    Global Reset
    ============================================ */

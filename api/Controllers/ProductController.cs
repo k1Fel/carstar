@@ -120,7 +120,7 @@ namespace api.Controllers
                 // GET: api/products/filter
         [HttpGet("filter")]
         public async Task<IActionResult> FilterProducts(
-            [FromQuery] int? categoryId,
+            [FromQuery] List<int>? categoryIds,
             [FromQuery] decimal? minPrice,
             [FromQuery] decimal? maxPrice,
             [FromQuery] string? search,
@@ -133,15 +133,42 @@ namespace api.Controllers
                 var filtered = products.AsEnumerable();
 
                 // Фільтр за категорією (враховує дочірні)
-                if (categoryId.HasValue)
+                if (categoryIds != null && categoryIds.Any())
                 {
                     var allCategories = await _categoryService.GetAllCategories();
-                    var categoryIds = GetAllChildIds(allCategories, categoryId.Value);
-                    categoryIds.Add(categoryId.Value);
+                    var flat = FlattenCategories(allCategories);
 
-                    filtered = filtered.Where(p => p.Categories.Any(c => categoryIds.Contains(c.Id)));                
+                    // Розгортаємо кожен обраний ID з його дочірніми
+                    // і групуємо по type
+                    var groupedByType = new Dictionary<string, HashSet<int>>();
+
+                    foreach (var catId in categoryIds)
+                    {
+                        // Знаходимо тип категорії
+                        var cat = flat.FirstOrDefault(c => c.Id == catId);
+                        if (cat == null) continue;
+
+                        var type = cat.Type;
+
+                        if (!groupedByType.ContainsKey(type))
+                            groupedByType[type] = new HashSet<int>();
+
+                        // Додаємо сам ID і всі дочірні
+                        groupedByType[type].Add(catId);
+                        foreach (var childId in GetAllChildIds(flat, catId))
+                            groupedByType[type].Add(childId);
+                    }
+
+                    // AND між групами, OR всередині групи
+                    filtered = filtered.Where(p =>
+                    {
+                        var productCategoryIds = p.Categories.Select(c => c.Id).ToHashSet();
+
+                        return groupedByType.All(group =>
+                            group.Value.Any(id => productCategoryIds.Contains(id))
+                        );
+                    });
                 }
-
                 // Фільтр за ціною
                 if (minPrice.HasValue)
                     filtered = filtered.Where(p => p.Price >= minPrice.Value);

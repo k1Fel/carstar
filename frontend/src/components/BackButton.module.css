@@ -1,0 +1,20 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid var(--b2);
+  color: var(--t3);
+  padding: 5px 12px;
+  font-size: 11px;
+  font-family: var(--fm);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: all var(--tr);
+  cursor: pointer;
+  height: 30px;
+}
+.btn:hover {
+  color: var(--t1);
+  border-color: var(--b3);
+}
