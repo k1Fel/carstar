@@ -22,16 +22,33 @@ namespace api.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<ProductCategory> ProductCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Category>()
-                .HasMany(c => c.Products)
-                .WithOne(p => p.Category)
-                .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasKey(c => c.Id);
+                entity.HasOne(c => c.Parent)
+                    .WithMany(c => c.Children)
+                    .HasForeignKey(c => c.ParentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ProductCategory>(entity =>
+            {
+                entity.HasKey(pc => new { pc.ProductId, pc.CategoryId });
+                entity.HasOne(pc => pc.Product)
+                    .WithMany(p => p.ProductCategories)
+                    .HasForeignKey(pc => pc.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(pc => pc.Category)
+                    .WithMany(c => c.ProductCategories)
+                    .HasForeignKey(pc => pc.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
              modelBuilder.Entity<Cart>(entity =>
             {
             entity.HasKey(c => c.Id);

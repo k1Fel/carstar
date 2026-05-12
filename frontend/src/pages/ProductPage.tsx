@@ -67,7 +67,9 @@ export default function ProductPage({ productId, onBack, onAuthRequired }: Produ
       <div className={styles.breadcrumb}>
         <button className={styles.breadLink} onClick={onBack}>Каталог</button>
         <span className={styles.breadSep}>›</span>
-        <span className={styles.breadCurrent}>{product.categoryName}</span>
+        <span className={styles.breadCurrent}>
+          {product.categories.find(c => c.type === 'part_type')?.name ?? ''}
+        </span>
         <span className={styles.breadSep}>›</span>
         <span className={styles.breadCurrent}>{product.name}</span>
       </div>
@@ -99,7 +101,9 @@ export default function ProductPage({ productId, onBack, onAuthRequired }: Produ
 
         {/* Info */}
         <div className={styles.info}>
-          <div className={styles.category}>{product.categoryName}</div>
+          <div className={styles.category}>
+            {product.categories.map(c => c.name).join(' · ')}
+          </div>
           <h1 className={styles.title}>{product.name}</h1>
           <div className={styles.sku}>
             SKU: {`CST-${String(product.id).padStart(6, '0')}`}
@@ -161,7 +165,9 @@ export default function ProductPage({ productId, onBack, onAuthRequired }: Produ
           <div className={styles.meta}>
             <div className={styles.metaRow}>
               <span className={styles.metaLabel}>Категорія</span>
-              <span className={styles.metaValue}>{product.categoryName}</span>
+              <span className={styles.metaValue}>
+                {product.categories.map(c => c.name).join(', ')}
+              </span>
             </div>
             <div className={styles.metaRow}>
               <span className={styles.metaLabel}>ID товару</span>

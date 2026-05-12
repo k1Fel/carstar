@@ -14,15 +14,9 @@ namespace api.Mappers.CategoryMappers
             return new Category
             {
                 Id = updateCategoryDto.Id,
-                Name = updateCategoryDto.Name
-            };
-        }
-        public static Category ToCategory(this CreateCategoryDto createCategoryDto)
-        {
-            return new Category
-            {
-                
-                Name = createCategoryDto.name
+                Name = updateCategoryDto.Name,
+                Type = updateCategoryDto.Type,
+                ParentId = updateCategoryDto.ParentId
             };
         }
         public static CategoryDtoResponse ToCategoryResponseDto(this Category category)
@@ -31,8 +25,24 @@ namespace api.Mappers.CategoryMappers
             {
                 Id = category.Id,
                 Name = category.Name,
-                ProductCount = category.Products?.Count ?? 0
+                Type = category.Type,
+                ParentId = category.ParentId,
+                ProductCount = category.ProductCategories?.Count ?? 0,
+                Children = category.Children?
+                    .Select(c => c.ToCategoryResponseDto())
+                    .ToList()
+            };
+}
+
+        public static Category ToCategory(this CreateCategoryDto dto)
+        {
+            return new Category
+            {
+                Name = dto.Name,
+                Type = dto.Type,
+                ParentId = dto.ParentId
             };
         }
+        
     }
 }

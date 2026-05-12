@@ -11,7 +11,7 @@ namespace api.Mappers.ProductMappers
 {
     public static class ProductMapper
     {
-        public static ProductDto ToProductDto(this Product product)
+       public static ProductDto ToProductDto(this Product product)
         {
             return new ProductDto
             {
@@ -21,8 +21,14 @@ namespace api.Mappers.ProductMappers
                 Description = product.Description,
                 Price = product.Price,
                 Stock = product.Stock,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category?.Name ?? "Unknown"
+                Categories = product.ProductCategories?
+                    .Where(pc => pc.Category != null)
+                    .Select(pc => new ProductCategoryDto
+                    {
+                        Id = pc.Category!.Id,
+                        Name = pc.Category.Name,
+                        Type = pc.Category.Type
+                    }).ToList() ?? new()
             };
         }
 
@@ -36,10 +42,13 @@ namespace api.Mappers.ProductMappers
                 Description = productDto.Description,
                 Price = productDto.Price,
                 Stock = productDto.Stock,
-                CategoryId = productDto.CategoryId,
+                ProductCategories = productDto.Categories.Select(c => new ProductCategory
+                {
+                    CategoryId = c.Id
+                }).ToList()
             };
         }
-        public static Product FromUpdateToProduct(this UpdateProductDto productDto, int id)
+       public static Product FromUpdateToProduct(this UpdateProductDto productDto, int id)
         {
             return new Product
             {
@@ -48,8 +57,8 @@ namespace api.Mappers.ProductMappers
                 Name = productDto.Name,
                 Description = productDto.Description,
                 Price = productDto.Price,
-                Stock = productDto.Stock,
-                CategoryId = productDto.CategoryId
+                Stock = productDto.Stock
+                // CategoryId більше немає
             };
         }
         public static Product FromCreateToProduct(this CreateProductDto productDto)
@@ -61,24 +70,17 @@ namespace api.Mappers.ProductMappers
                 Description = productDto.Description,
                 Price = productDto.Price,
                 Stock = productDto.Stock,
-                CategoryId = productDto.CategoryId
-                
+                ProductCategories = productDto.CategoryIds.Select(cid => new ProductCategory
+                {
+                    CategoryId = cid
+                }).ToList()
             };
         }
         public static ProductResponseDto ToProductResponse(this Product product)
         {
-            return new ProductResponseDto
-            {
-                Id = product.Id,
-                ImageUrl = product.ImageUrl,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                Stock = product.Stock,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category?.Name ?? "Unknown"
-            };
+            return product.ToProductResponseDto();
         }
+
         public static ProductResponseDto ToProductResponseDto(this Product product)
         {
             return new ProductResponseDto
@@ -89,9 +91,16 @@ namespace api.Mappers.ProductMappers
                 Description = product.Description,
                 Price = product.Price,
                 Stock = product.Stock,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category?.Name ?? "Unknown"
+                Categories = product.ProductCategories?
+                    .Where(pc => pc.Category != null)
+                    .Select(pc => new ProductCategoryDto
+                    {
+                        Id = pc.Category!.Id,
+                        Name = pc.Category.Name,
+                        Type = pc.Category.Type
+                    }).ToList() ?? new()
             };
-        }   
+        }
     }
 }
+

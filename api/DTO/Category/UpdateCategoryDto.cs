@@ -11,5 +11,9 @@ namespace api.DTO.Category
         [Required(ErrorMessage = "Назва категорії обов'язкова")]
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Назва має бути від 3 до 100 символів")]
         public string Name { get; set; } = string.Empty;
+        [Required]
+        public string Type { get; set; } = string.Empty;
+        public int? ParentId { get; set; }
+
     }
 }

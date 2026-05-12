@@ -52,20 +52,22 @@ export default function Header({
 
         {/* Right icons */}
         <div className={styles.right}>
+          {/* Search icon — restored */}
           <button
-              className={styles.iconBtn}
-              title="Пошук"
-              onClick={() => onNavigate('catalog')}
-            >
+            className={styles.iconBtn}
+            title="Пошук"
+            onClick={() => onNavigate('catalog')}
+          >
+            <SearchIcon />
           </button>
 
           <button
-          className={styles.iconBtn}
-          title="Уподобані"
-          onClick={() => onNavigate('favorites')}
-        >
-          <HeartIcon />
-        </button>
+            className={styles.iconBtn}
+            title="Уподобані"
+            onClick={() => onNavigate('favorites')}
+          >
+            <HeartIcon />
+          </button>
 
           <button
             className={styles.iconBtn}

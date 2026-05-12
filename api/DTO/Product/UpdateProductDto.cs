@@ -19,7 +19,6 @@ namespace api.DTO
         public decimal Price { get; set; }
         [Range(0, int.MaxValue, ErrorMessage = "Кількість не може бути від'ємною")]
         public int Stock { get; set; }
-        [Range(1, int.MaxValue, ErrorMessage = "Невірний ID категорії")]
-        public int CategoryId { get; set; }
+        public List<int> CategoryIds { get; set; } = new();
     }
 }

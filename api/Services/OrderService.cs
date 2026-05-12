@@ -66,7 +66,7 @@ namespace api.Services
 
                 // ЗМЕНШИТИ STOCK
                 product.Stock -= cartItem.Quantity;
-                await _productRepository.UpdateProductAsync(product.Id, product);
+                await _productRepository.UpdateProductAsync(product.Id, product, new List<int>());
 
                 // СТВОРИТИ OrderItem (використовуємо mapper)
                 var orderItem = cartItem.ToOrderItem(order.Id);
@@ -167,7 +167,7 @@ namespace api.Services
                     if (product != null)
                     {
                         product.Stock += orderItem.Quantity;
-                        await _productRepository.UpdateProductAsync(product.Id, product);
+                        await _productRepository.UpdateProductAsync(product.Id, product, new List<int>());
                     }
                 }
             }
@@ -210,7 +210,7 @@ namespace api.Services
                 if (product != null)
                 {
                     product.Stock += orderItem.Quantity;
-                    await _productRepository.UpdateProductAsync(product.Id, product);
+                    await _productRepository.UpdateProductAsync(product.Id, product, new List<int>());
                 }
             }
 

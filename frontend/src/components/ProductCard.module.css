@@ -40,6 +40,35 @@
   justify-content: center;
 }
 
+/* Favorite button — top right, properly centered */
+.actionIconBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  background: rgba(8, 8, 8, 0.7);
+  border: 1px solid var(--b3);
+  border-radius: 50%;
+  color: var(--t3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--tr);
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+.actionIconBtn:hover {
+  color: var(--t1);
+  border-color: var(--t4);
+  background: rgba(8, 8, 8, 0.9);
+}
+.favActive {
+  color: #e74c3c !important;
+  border-color: rgba(231, 76, 60, 0.4) !important;
+  background: rgba(231, 76, 60, 0.08) !important;
+}
+
 .tag {
   position: absolute;
   top: 0;
@@ -113,14 +142,13 @@
   color: var(--t1);
 }
 
+/* Add to cart button — centered icon */
 .addBtn {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   background: var(--s3);
   border: 1px solid var(--b3);
   color: var(--t2);
-  font-size: 18px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;

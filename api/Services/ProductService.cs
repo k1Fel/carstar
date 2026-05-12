@@ -23,16 +23,16 @@ namespace api.Services
 
         public async Task<ProductResponseDto> AddProductAsync(CreateProductDto productDto)
         {
-            var category = await _categoryRepository.GetCategoryById(productDto.CategoryId);
-            if (category == null)
+            // Перевірка що всі категорії існують
+            foreach (var catId in productDto.CategoryIds)
             {
-                throw new ArgumentException($"Категорія з ID {productDto.CategoryId} не знайдена");
+                var category = await _categoryRepository.GetCategoryById(catId);
+                if (category == null)
+                    throw new ArgumentException($"Категорія з ID {catId} не знайдена");
             }
 
             var product = productDto.FromCreateToProduct();
-
-            var addedProduct = await _productRepository.AddProductAsync(product);
-
+            var addedProduct = await _productRepository.AddProductAsync(product, productDto.CategoryIds);
             return addedProduct.ToProductResponseDto();
         }
 
@@ -71,20 +71,17 @@ namespace api.Services
         {
             var existingProduct = await _productRepository.GetProductByIdAsync(id);
             if (existingProduct == null)
-            {
                 throw new ArgumentException($"Товар з ID {id} не знайдено");
-            }
 
-            var category = await _categoryRepository.GetCategoryById(productDto.CategoryId);
-            if (category == null)
+            foreach (var catId in productDto.CategoryIds)
             {
-                throw new ArgumentException($"Категорія з ID {productDto.CategoryId} не знайдена");
+                var category = await _categoryRepository.GetCategoryById(catId);
+                if (category == null)
+                    throw new ArgumentException($"Категорія з ID {catId} не знайдена");
             }
 
             var product = productDto.FromUpdateToProduct(id);
-
-            var updatedProduct = await _productRepository.UpdateProductAsync(id, product);
-
+            var updatedProduct = await _productRepository.UpdateProductAsync(id, product, productDto.CategoryIds);
             return updatedProduct?.ToProductResponseDto();
         }
     }

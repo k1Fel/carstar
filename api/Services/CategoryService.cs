@@ -19,7 +19,7 @@ namespace api.Services
         } 
         public async Task<CategoryDtoResponse> CreateCategory(CreateCategoryDto createCategoryDto)
         {
-            var existingCategory = await _categoryRepository.GetCategoryByName(createCategoryDto.name);
+            var existingCategory = await _categoryRepository.GetCategoryByName(createCategoryDto.Name);
             if (existingCategory != null)            {
                 throw new ArgumentException("Категорія з такою назвою вже існує");
             }

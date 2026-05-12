@@ -35,31 +35,51 @@ export interface CategoryDtoResponse {
 }
 
 // --- Product ---
+// Замінити старий ProductDto
+export interface ProductCategoryDto {
+  id: number;
+  name: string;
+  type: string; // "part_type", "brand", "model", "country"
+}
+
 export interface ProductDto {
   id: number;
   name: string;
   description: string;
   price: number;
   stock: number;
-  categoryId: number;
-  categoryName: string;
-  imageUrl?: string; // optional — якщо бекенд повертає URL картинки
+  imageUrl?: string;
+  categories: ProductCategoryDto[]; // замість categoryId/categoryName
 }
 
+// CategoryDtoResponse — додати поля
+export interface CategoryDtoResponse {
+  id: number;
+  name: string;
+  type: string;
+  parentId?: number;
+  productCount: number;
+  children?: CategoryDtoResponse[];
+}
+
+// CreateProductDto — замінити categoryId
 export interface CreateProductDto {
   name: string;
   description: string;
   price: number;
   stock: number;
-  categoryId: number;
+  imageUrl?: string;
+  categoryIds: number[]; // замість categoryId
 }
 
+// UpdateProductDto — те саме
 export interface UpdateProductDto {
   name: string;
   description: string;
   price: number;
   stock: number;
-  categoryId: number;
+  imageUrl?: string;
+  categoryIds: number[];
 }
 
 // Filter params → GET /api/products/filter

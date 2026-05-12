@@ -5,9 +5,12 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 namespace api.DTO.Category
 {
-    public class CreateCategoryDto
+   public class CreateCategoryDto
     {
-        [Required(ErrorMessage = "Назва категорії обов'язкова")]
-        public string name { get; set; } = string.Empty;
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        [Required]
+        public string Type { get; set; } = string.Empty;
+        public int? ParentId { get; set; }
     }
 }

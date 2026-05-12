@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace api.DTO.Category
+namespace api.DTO.Product
 {
-    public class CategoryDtoResponse
+    public class ProductCategoryDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
-        public int? ParentId { get; set; }
-        public int ProductCount { get; set; }
-        public List<CategoryDtoResponse>? Children { get; set; }
     }
 }

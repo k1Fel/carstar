@@ -4,6 +4,8 @@ using api.DTO.Product;
 using api.DTO;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
+using api.Services.Interfaces;
+using api.DTO.Category;
 
 namespace api.Controllers
 {
@@ -12,10 +14,12 @@ namespace api.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductInterface _productService;
+        private readonly ICategoryService _categoryService;
 
-        public ProductController(IProductInterface productService)
+        public ProductController(IProductInterface productService, ICategoryService categoryService)
         {
             _productService = productService;
+            _categoryService = categoryService;
         }
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto createProductDto)
@@ -128,28 +132,26 @@ namespace api.Controllers
                 var products = await _productService.GetAllProductsAsync();
                 var filtered = products.AsEnumerable();
 
-                // Фільтр за категорією
+                // Фільтр за категорією (враховує дочірні)
                 if (categoryId.HasValue)
                 {
-                    filtered = filtered.Where(p => p.CategoryId == categoryId.Value);
+                    var allCategories = await _categoryService.GetAllCategories();
+                    var categoryIds = GetAllChildIds(allCategories, categoryId.Value);
+                    categoryIds.Add(categoryId.Value);
+
+                    filtered = filtered.Where(p => p.Categories.Any(c => categoryIds.Contains(c.Id)));                
                 }
 
                 // Фільтр за ціною
                 if (minPrice.HasValue)
-                {
                     filtered = filtered.Where(p => p.Price >= minPrice.Value);
-                }
 
                 if (maxPrice.HasValue)
-                {
                     filtered = filtered.Where(p => p.Price <= maxPrice.Value);
-                }
 
                 // Фільтр наявності
                 if (inStock.HasValue && inStock.Value)
-                {
                     filtered = filtered.Where(p => p.Stock > 0);
-                }
 
                 // Пошук за назвою або описом
                 if (!string.IsNullOrWhiteSpace(search))
@@ -160,23 +162,19 @@ namespace api.Controllers
                     );
                 }
 
-                
+                // Similar — пошук за ключовими словами
                 if (!string.IsNullOrWhiteSpace(similar))
                 {
                     string request = similar.Trim().ToLower();
                     var keywords = request.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                    
                     var matched = filtered.Where(p =>
                         keywords.All(keyword => p.Name.ToLower().Contains(keyword))
                     ).ToList();
 
                     if (!matched.Any())
-                    {
                         return NotFound(new { message = "Товари з такими ключовими словами не знайдено" });
-                    }
 
-                    
                     var groups = matched
                         .GroupBy(p => string.Join(" ", keywords))
                         .Select(g => new
@@ -189,21 +187,18 @@ namespace api.Controllers
                                 p.Name,
                                 p.Price,
                                 p.Stock,
-                                CategoryName = p.CategoryName ?? "Без категорії"
-                            }).OrderBy(p => p.Price) 
+                                CategoryName = p.Categories.FirstOrDefault()?.Name ?? "Без категорії"                            
+                                }).OrderBy(p => p.Price)
                         })
                         .ToList();
 
                     return Ok(groups);
                 }
 
-                
                 var result = filtered.ToList();
 
                 if (!result.Any())
-                {
                     return NotFound(new { message = "Товари за заданими критеріями не знайдено" });
-                }
 
                 return Ok(result);
             }
@@ -211,6 +206,41 @@ namespace api.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }  
+        }
+
+        private HashSet<int> GetAllChildIds(List<CategoryDtoResponse> all, int parentId)
+        {
+            var result = new HashSet<int>();
+
+            // Збираємо всі категорії в плаский список
+            var flat = FlattenCategories(all);
+
+            // Знаходимо всіх нащадків рекурсивно
+            var children = flat.Where(c => c.ParentId == parentId);
+
+            foreach (var child in children)
+            {
+                result.Add(child.Id);
+                foreach (var id in GetAllChildIds(flat, child.Id))
+                    result.Add(id);
+            }
+
+            return result;
+        }
+
+        // Допоміжний метод — розгортає дерево категорій у плаский список
+        private List<CategoryDtoResponse> FlattenCategories(List<CategoryDtoResponse> categories)
+        {
+            var result = new List<CategoryDtoResponse>();
+
+            foreach (var cat in categories)
+            {
+                result.Add(cat);
+                if (cat.Children != null && cat.Children.Any())
+                    result.AddRange(FlattenCategories(cat.Children));
+            }
+
+            return result;
+        } 
     }
 }

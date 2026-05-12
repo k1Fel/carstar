@@ -16,9 +16,11 @@ namespace api.Repository
         {
             _context = context;
         }
-        public async Task<IEnumerable<Category>> GetCategoriesAsync()
+       public async Task<IEnumerable<Category>> GetCategoriesAsync()
         {
-            return await _context.Categories.Include(c => c.Products).ToListAsync();
+            return await _context.Categories
+                .Include(c => c.ProductCategories)
+                .ToListAsync();
         }
         public async Task<Category> CreateCategory(Category category)
         {
@@ -38,12 +40,21 @@ namespace api.Repository
         
         public async Task<List<Category>> GetAllCategories()
         {
-            return await _context.Categories.ToListAsync();
+            return await _context.Categories
+                .Include(c => c.Children!)
+                    .ThenInclude(c => c.Children!)
+                        .ThenInclude(c => c.ProductCategories)
+                .Include(c => c.ProductCategories)
+                .Where(c => c.ParentId == null)
+                .ToListAsync();
         }
 
         public async Task<Category?> GetCategoryById(int id)
         {
-            return await _context.Categories.Include(c => c.Products).FirstOrDefaultAsync(c => c.Id == id);
+            return await _context.Categories
+                .Include(c => c.ProductCategories)
+                .Include(c => c.Children)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<Category?> UpdateCategory(int id, Category category)
@@ -56,8 +67,8 @@ namespace api.Repository
         }
         public async Task<int> GetProductCountAsync(int categoryId)
         {
-            return await _context.Products
-                .CountAsync(p => p.CategoryId == categoryId);
+            return await _context.ProductCategories
+                .CountAsync(pc => pc.CategoryId == categoryId);
         }
         public async Task<Category?> GetCategoryByName(string name)
         {

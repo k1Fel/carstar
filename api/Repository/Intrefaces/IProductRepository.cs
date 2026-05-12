@@ -9,8 +9,8 @@ namespace api.Repository.Intrefaces
     {
         Task<List<Product>> GetAllProductsAsync();
         Task<Product?> GetProductByIdAsync(int id);
-        Task<Product> AddProductAsync(Product product);
-        Task<Product?> UpdateProductAsync(int id, Product product);
+        Task<Product> AddProductAsync(Product product, List<int> categoryIds);        
+        Task<Product?> UpdateProductAsync(int id, Product product, List<int> categoryIds);
         Task<bool> DeleteProductAsync(int id);
     }
 }
