@@ -23,6 +23,7 @@ namespace api.Data
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -93,6 +94,14 @@ namespace api.Data
                     .WithMany()
                     .HasForeignKey(oi => oi.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
+                });
+                modelBuilder.Entity<RefreshToken>(entity =>
+{
+                    entity.HasKey(r => r.Id);
+                    entity.HasOne(r => r.Account)
+                        .WithMany()
+                        .HasForeignKey(r => r.AccountId)
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
         }
     }

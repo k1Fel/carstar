@@ -26,17 +26,14 @@ namespace api.Services
             _productRepository = productRepository;
         }
 
-        // ✅ ПОВЕРТАЄ ResponseOrderDto
         public async Task<ResponseOrderDto> CreateOrderFromCartAsync(int accountId, CreateOrderDto createOrderDto)
         {
-            // 1️⃣ ОТРИМАТИ КОШИК
             var cart = await _cartRepository.GetCartByAccountId(accountId);
             if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
             {
                 throw new ArgumentException("Кошик порожній");
             }
 
-            // 2️⃣ СТВОРИТИ ORDER
             var order = new Order
             {
                 AccountId = accountId,
@@ -46,7 +43,6 @@ namespace api.Services
                 OrderItems = new List<OrderItem>()
             };
 
-            // 3️⃣ КОПІЮВАТИ CartItems В OrderItems
             decimal totalAmount = 0;
 
             foreach (var cartItem in cart.CartItems)
@@ -77,13 +73,10 @@ namespace api.Services
                 totalAmount += orderItem.Price * orderItem.Quantity;
             }
 
-            // 4️⃣ ВСТАНОВИТИ TotalAmount
             order.TotalAmount = totalAmount;
 
-            // 5️⃣ ЗБЕРЕГТИ ORDER
             var createdOrder = await _orderRepository.CreateOrderAsync(order);
 
-            // 6️⃣ ОЧИСТИТИ КОШИК
             await _cartRepository.ClearCartAsync(cart.Id);
 
             // 7️⃣ ПОВЕРНУТИ DTO (mapper в сервісі)

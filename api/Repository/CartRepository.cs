@@ -17,7 +17,6 @@ namespace api.Repository
             _context = context;
         }
 
-        // ✅ Отримати кошик з товарами
         public async Task<Cart?> GetCartByAccountId(int accountId)
         {
             return await _context.Carts
@@ -26,7 +25,6 @@ namespace api.Repository
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
         }
 
-        // ✅ Створити кошик
         public async Task<Cart> CreateCart(Cart cart)
         {
             await _context.Carts.AddAsync(cart);
@@ -34,7 +32,6 @@ namespace api.Repository
             return cart;
         }
 
-        // ✅ Знайти CartItem за CartId і ProductId (для додавання)
         public async Task<CartItem?> GetCartItemAsync(int cartId, int productId)
         {
             return await _context.CartItems
@@ -42,7 +39,6 @@ namespace api.Repository
                 .FirstOrDefaultAsync(ci => ci.CartId == cartId && ci.ProductId == productId);
         }
 
-        // ✅ ДОДАЙТЕ ЦЕЙ МЕТОД - Знайти CartItem за його Id (для оновлення)
         public async Task<CartItem?> GetCartItemByIdAsync(int cartItemId)
         {
             return await _context.CartItems
@@ -50,7 +46,6 @@ namespace api.Repository
                 .FirstOrDefaultAsync(ci => ci.Id == cartItemId);
         }
 
-        // ✅ Додати товар
         public async Task<CartItem> AddCartItemAsync(CartItem cartItem)
         {
             await _context.CartItems.AddAsync(cartItem);
@@ -58,7 +53,6 @@ namespace api.Repository
             return cartItem;
         }
 
-        // ✅ Оновити товар
         public async Task<CartItem?> UpdateCartItemAsync(CartItem cartItem)
         {
             _context.CartItems.Update(cartItem);
@@ -66,7 +60,6 @@ namespace api.Repository
             return cartItem;
         }
 
-        // ✅ Видалити товар
         public async Task<bool> DeleteCartItemAsync(int cartItemId)
         {
             var cartItem = await _context.CartItems.FindAsync(cartItemId);
@@ -80,7 +73,6 @@ namespace api.Repository
             return true;
         }
 
-        // ✅ Очистити кошик
         public async Task<Cart> ClearCartAsync(int cartId)
         {
             var items = await _context.CartItems

@@ -1,10 +1,12 @@
 // ============================================
-// CARSTAR — App (full)
+// CARSTAR — App.tsx
 // ============================================
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
+import { UnauthorizedError } from './api';
 import type { ProductDto } from './types';
+
 
 import Header      from './components/Header';
 import HeroSection from './components/HeroSection';
@@ -16,7 +18,7 @@ import ProfilePage from './pages/ProfilePage';
 import FavoritesPage from './pages/FavoritesPage';
 import './styles/tokens.css';
 
-type Page = 'home' | 'catalog' | 'product' | 'profile' | 'orders'  | 'selector' | 'favorites';
+type Page = 'home' | 'catalog' | 'product' | 'profile' | 'orders' | 'selector' | 'favorites';
 
 export default function App() {
   const [page, setPage]         = useState<Page>('home');
@@ -24,29 +26,46 @@ export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-  const goProduct = (product: ProductDto) => {
-    setSelectedProductId(product.id);
-    setPage('product');
-  };
-  const [history, setHistory] = useState<Page[]>([]);
+  // Стек навігації для кнопки "Назад"
+  const [historyStack, setHistoryStack] = useState<Page[]>([]);
 
-  // Навігація з запам'ятовуванням попередньої сторінки
+  // Навігація з запам'ятовуванням
   const navigate = (p: Page) => {
-    setHistory(prev => [...prev, page]); // зберігаємо поточну перед переходом
+    setHistoryStack(prev => [...prev, page]);
     setPage(p);
   };
 
   // Назад
   const goBack = () => {
-  if (history.length === 0) {
-    setPage('catalog');
-    return;
-  }
+    if (historyStack.length === 0) {
+      setPage('home');
+      return;
+    }
+    const prev = historyStack[historyStack.length - 1];
+    setHistoryStack(h => h.slice(0, -1));
+    setPage(prev);
+  };
 
-  const prev = history[history.length - 1];
-  setHistory(h => h.slice(0, -1));
-  setPage(prev);
-};
+  // Перехід на продукт
+  const goProduct = (product: ProductDto) => {
+    setHistoryStack(prev => [...prev, page]);
+    setSelectedProductId(product.id);
+    setPage('product');
+  };
+
+  // Глобальний обробник 401
+  useEffect(() => {
+    const handleUnauthorized = (e: PromiseRejectionEvent) => {
+      if (e.reason instanceof UnauthorizedError) {
+        e.preventDefault();
+        setAuthOpen(true);
+      }
+    };
+
+    window.addEventListener('unhandledrejection', handleUnauthorized);
+    return () => window.removeEventListener('unhandledrejection', handleUnauthorized);
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>
@@ -61,41 +80,46 @@ export default function App() {
           <main>
             {page === 'home' && (
               <>
-                <HeroSection onCatalogClick={() => setPage('catalog')} />
+                <HeroSection onCatalogClick={() => navigate('catalog')} />
                 <CatalogPage
+                  onBack={goBack}
                   onAuthRequired={() => setAuthOpen(true)}
                   onProductClick={goProduct}
-                  onBack={goBack}
-                 /> 
+                />
               </>
             )}
-              {page === 'catalog' && (
-                <CatalogPage
-                  onBack={goBack}
-                  onAuthRequired={() => setAuthOpen(true)}
-                  onProductClick={goProduct}
-                />
-              )}
 
-              {page === 'product' && selectedProductId && (
-                <ProductPage
-                  productId={selectedProductId}
-                  onBack={goBack}
-                  onAuthRequired={() => setAuthOpen(true)}
-                />
-              )}
+            {page === 'catalog' && (
+              <CatalogPage
+                onBack={goBack}
+                onAuthRequired={() => setAuthOpen(true)}
+                onProductClick={goProduct}
+              />
+            )}
 
-              {(page === 'profile' || page === 'orders') && (
-                <ProfilePage onBack={goBack} />
-              )}
+            {page === 'product' && selectedProductId && (
+              <ProductPage
+                productId={selectedProductId}
+                onBack={goBack}
+                onAuthRequired={() => setAuthOpen(true)}
+              />
+            )}
 
-              {page === 'favorites' && (
-                <FavoritesPage
-                  onBack={goBack}
-                  onAuthRequired={() => setAuthOpen(true)}
-                  onProductClick={goProduct}
-                />
-)}
+            {(page === 'profile' || page === 'orders') && (
+              <ProfilePage onBack={goBack} />
+            )}
+
+            {page === 'selector' && (
+              <PlaceholderPage title="Підбір за авто" />
+            )}
+
+            {page === 'favorites' && (
+              <FavoritesPage
+                onBack={goBack}
+                onAuthRequired={() => setAuthOpen(true)}
+                onProductClick={goProduct}
+              />
+            )}
           </main>
 
           {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}

@@ -138,8 +138,7 @@ namespace api.Controllers
                     var allCategories = await _categoryService.GetAllCategories();
                     var flat = FlattenCategories(allCategories);
 
-                    // Розгортаємо кожен обраний ID з його дочірніми
-                    // і групуємо по type
+                    
                     var groupedByType = new Dictionary<string, HashSet<int>>();
 
                     foreach (var catId in categoryIds)
@@ -169,7 +168,6 @@ namespace api.Controllers
                         );
                     });
                 }
-                // Фільтр за ціною
                 if (minPrice.HasValue)
                     filtered = filtered.Where(p => p.Price >= minPrice.Value);
 
@@ -180,7 +178,6 @@ namespace api.Controllers
                 if (inStock.HasValue && inStock.Value)
                     filtered = filtered.Where(p => p.Stock > 0);
 
-                // Пошук за назвою або описом
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     filtered = filtered.Where(p =>
@@ -189,7 +186,6 @@ namespace api.Controllers
                     );
                 }
 
-                // Similar — пошук за ключовими словами
                 if (!string.IsNullOrWhiteSpace(similar))
                 {
                     string request = similar.Trim().ToLower();

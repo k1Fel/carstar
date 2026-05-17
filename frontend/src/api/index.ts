@@ -12,8 +12,14 @@ import type {
   ResponseOrderDto, CreateOrderDto, UpdateOrderStatusDto,
 } from '../types';
 
+export class UnauthorizedError extends Error {
+  constructor(message = 'Сесія закінчилась. Будь ласка, увійдіть знову.') {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
 const BASE = 'http://localhost:5253/api';
-
+const REFRESH_KEY = 'carstar_refresh_token';
 function getToken(): string | null {
   return localStorage.getItem('carstar_token');
 }
@@ -27,6 +33,7 @@ async function request<T>(
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> ?? {}),
   };
+  
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
@@ -38,7 +45,15 @@ async function request<T>(
 
   // 204 No Content
   if (res.status === 204) return undefined as T;
+  if (res.status === 401) {
+    // Очищаємо токен
+    localStorage.removeItem('carstar_token');
+    localStorage.removeItem('carstar_account');
+    // Кидаємо спеціальну помилку
+    throw new UnauthorizedError('Сесія закінчилась. Будь ласка, увійдіть знову.');
+  }
   return res.json();
+  
 }
 
 // ============================================

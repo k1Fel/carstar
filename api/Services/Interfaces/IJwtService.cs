@@ -9,5 +9,6 @@ namespace api.Services.Interfaces
     public interface IJwtService
     {
         public string GenerateToken(Account account);
+        public string GenerateRefreshToken();
     }
 }

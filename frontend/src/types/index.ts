@@ -24,6 +24,7 @@ export interface RegisterDto {
 export interface AuthResponse {
   message: string;
   token: string;
+  refreshToken: string;
   account: AccountResponseDto;
 }
 
