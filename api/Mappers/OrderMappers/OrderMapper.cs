@@ -26,11 +26,13 @@ namespace api.Mappers.OrderMappers
             {
                 Id = order.Id,
                 AccountId = order.AccountId,
+                UserName = order.Account?.UserName ?? string.Empty,
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,
                 ShippingAddress = order.ShippingAddress,
+                CancellationReason = order.CancellationReason,
                 CreatedAt = order.CreatedAt,
-                OrderItems = order.OrderItems?.Select(oi => oi.ToOrderItemResponseDto()).ToList() 
+                OrderItems = order.OrderItems?.Select(oi => oi.ToOrderItemResponseDto()).ToList()
                     ?? new List<OrderItemResponseDto>()
             };
         }

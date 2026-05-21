@@ -98,7 +98,6 @@
   height: 14px;
   padding: 0 3px;
   background: var(--red);
-  border-radius: 7px;
   font-family: var(--fm);
   font-size: 8px;
   font-weight: 600;
@@ -178,3 +177,133 @@
 .dropSep { height: 1px; background: var(--b1); margin: 4px 0; }
 .dropLogout { color: var(--t4) !important; }
 .dropLogout:hover { color: var(--red) !important; }
+/* User Avatar */
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  background: var(--s2);
+  border: 1px solid var(--b1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fc);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t2);
+  transition: all 0.2s;
+}
+
+/* ✅ ADMIN avatar - червоні літери */
+.adminAvatar {
+  color: #e74c3c;
+  border-color: rgba(231, 76, 60, 0.3);
+  background: rgba(231, 76, 60, 0.05);
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--t2);
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: all 0.2s;
+}
+
+.userButton:hover {
+  background: var(--s2);
+}
+
+.userName {
+  font-family: var(--fb);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.userMenu {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  padding: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s;
+  z-index: 100;
+}
+
+.userMenu:hover .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* ✅ ADMIN badge в dropdown */
+.dropdownAdmin {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  text-align: center;
+}
+
+.adminBadgeText {
+  font-family: var(--fm);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #e74c3c;
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--t3);
+  font-family: var(--fb);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdownItem:hover {
+  background: var(--s2);
+  color: var(--t1);
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: var(--b1);
+  margin: 8px 0;
+}
+
+.loginButton {
+  padding: 8px 20px;
+  background: var(--acc);
+  color: var(--bg);
+  border: none;
+  font-family: var(--fc);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loginButton:hover {
+  background: var(--t1);
+  transform: translateY(-2px);
+}

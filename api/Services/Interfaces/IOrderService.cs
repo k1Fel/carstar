@@ -10,7 +10,7 @@ namespace api.Services.Interfaces
         Task<ResponseOrderDto?> GetOrderByIdAsync(int orderId, int accountId); 
         Task<List<ResponseOrderDto>> GetOrdersByAccountIdAsync(int accountId); 
         Task<List<ResponseOrderDto>> GetAllOrdersAsync(); 
-        Task<ResponseOrderDto?> UpdateOrderStatusAsync(int orderId, string status); 
+        Task<ResponseOrderDto?> UpdateOrderStatusAsync(int orderId, string status, string? cancellationReason = null);
         Task<bool> CancelOrderAsync(int orderId, int accountId);
     }
 }

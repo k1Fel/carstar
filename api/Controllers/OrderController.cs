@@ -120,24 +120,20 @@ namespace api.Controllers
 
         [HttpPatch("{id:int}/status")]
         [Authorize]
-        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusDto updateStatusDto)
+        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusDto dto)
         {
             try
             {
-                var order = await _orderService.UpdateOrderStatusAsync(id, updateStatusDto.Status);
-
+                var order = await _orderService.UpdateOrderStatusAsync(id, dto.Status, dto.CancellationReason);
                 if (order == null)
-                {
                     return NotFound(new { message = $"Замовлення з ID {id} не знайдено" });
-                }
-
                 return Ok(order);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }

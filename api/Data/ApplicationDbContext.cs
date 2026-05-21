@@ -24,6 +24,8 @@ namespace api.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,7 +61,8 @@ namespace api.Data
             .HasForeignKey(c => c.AccountId)
             .OnDelete(DeleteBehavior.Cascade);
             });
-             modelBuilder.Entity<CartItem>(entity =>
+
+            modelBuilder.Entity<CartItem>(entity =>
             {
             entity.HasKey(ci => ci.Id);
         
@@ -72,37 +75,58 @@ namespace api.Data
             .HasForeignKey(ci => ci.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
             });
-                modelBuilder.Entity<Order>(entity =>
-                {
-                    entity.HasKey(o => o.Id);
-        
-                    entity.HasOne(o => o.Account)
+
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.Id);
+    
+                entity.HasOne(o => o.Account)
+                .WithMany()
+                .HasForeignKey(o => o.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                entity.HasKey(oi => oi.Id);
+    
+                entity.HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+                entity.HasOne(oi => oi.Product)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(r => r.Id);
+                entity.HasOne(r => r.Account)
                     .WithMany()
-                    .HasForeignKey(o => o.AccountId)
+                    .HasForeignKey(r => r.AccountId)
                     .OnDelete(DeleteBehavior.Cascade);
-                });
-                modelBuilder.Entity<OrderItem>(entity =>
-                {
-                    entity.HasKey(oi => oi.Id);
-        
-                    entity.HasOne(oi => oi.Order)
-                    .WithMany(o => o.OrderItems)
-                    .HasForeignKey(oi => oi.OrderId)
-                    .OnDelete(DeleteBehavior.Cascade);
-        
-                    entity.HasOne(oi => oi.Product)
+            });
+
+            
+            modelBuilder.Entity<Favorite>(entity =>
+            {
+                entity.HasKey(f => f.Id);
+                entity.HasIndex(f => new { f.AccountId, f.ProductId }).IsUnique();
+                entity.HasOne(f => f.Account)
                     .WithMany()
-                    .HasForeignKey(oi => oi.ProductId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                });
-                modelBuilder.Entity<RefreshToken>(entity =>
-{
-                    entity.HasKey(r => r.Id);
-                    entity.HasOne(r => r.Account)
-                        .WithMany()
-                        .HasForeignKey(r => r.AccountId)
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
+                    .HasForeignKey(f => f.AccountId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(f => f.Product)
+                    .WithMany()
+                    .HasForeignKey(f => f.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

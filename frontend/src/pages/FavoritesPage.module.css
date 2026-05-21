@@ -81,3 +81,16 @@
   max-width: 300px;
   line-height: 1.6;
 }
+.authBtn {
+  background: var(--acc);
+  color: var(--bg);
+  border: none;
+  padding: 10px 28px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  transition: opacity var(--tr);
+}
+.authBtn:hover { opacity: .85; }

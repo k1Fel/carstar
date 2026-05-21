@@ -16,9 +16,10 @@ import CatalogPage from './pages/CatalogPage';
 import ProductPage from './pages/ProductPage';
 import ProfilePage from './pages/ProfilePage';
 import FavoritesPage from './pages/FavoritesPage';
+import AdminPage from './pages/AdminPage';
 import './styles/tokens.css';
 
-type Page = 'home' | 'catalog' | 'product' | 'profile' | 'orders' | 'selector' | 'favorites';
+type Page = 'home' | 'catalog' | 'product' | 'profile' | 'orders' | 'selector' | 'favorites' | 'admin';
 
 export default function App() {
   const [page, setPage]         = useState<Page>('home');
@@ -119,6 +120,10 @@ export default function App() {
                 onAuthRequired={() => setAuthOpen(true)}
                 onProductClick={goProduct}
               />
+              
+            )}
+            {page === 'admin' && (
+              <AdminPage onBack={goBack} />
             )}
           </main>
 

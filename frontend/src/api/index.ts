@@ -8,7 +8,7 @@ import type {
   LoginDto, RegisterDto, AuthResponse, AccountResponseDto,
   CategoryDtoResponse,
   ProductDto, CreateProductDto, UpdateProductDto, ProductFilterParams,
-  CartResponseDto, AddToCartDto, UpdateCartItemDto,
+  CartResponseDto, AddToCartDto, UpdateCartItemDto, ProductResponseDto,
   ResponseOrderDto, CreateOrderDto, UpdateOrderStatusDto,
 } from '../types';
 
@@ -203,4 +203,59 @@ export const orderApi = {
     request<{ message: string }>(`/orders/${id}/cancel`, {
       method: 'DELETE',
     }),
+};
+// ============================================
+// Favorites  →  /api/favorites
+// ============================================
+export const favoriteApi = {
+  getIds: () =>
+    request<number[]>('/favorites/ids'),
+
+  getAll: () =>
+    request<ProductResponseDto[]>('/favorites'),
+
+  add: (productId: number) =>
+    request<{ message: string }>(`/favorites/${productId}`, { method: 'POST' }),
+
+  remove: (productId: number) =>
+    request<{ message: string }>(`/favorites/${productId}`, { method: 'DELETE' }),
+};
+
+// ============================================
+// Admin  →  /api/account, /api/orders, /api/products
+// ============================================
+export const adminApi = {
+  // Користувачі (поки через звичайний endpoint — розширимо)
+  getAllOrders: () =>
+    request<ResponseOrderDto[]>('/orders/all'),
+
+  updateOrderStatus: (id: number, dto: UpdateOrderStatusDto) =>
+    request<ResponseOrderDto>(`/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(dto),
+    }),
+
+  createProduct: (dto: CreateProductDto) =>
+    request<ProductDto>('/products', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    }),
+
+  updateProduct: (id: number, dto: UpdateProductDto) =>
+    request<ProductDto>(`/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    }),
+
+  deleteProduct: (id: number) =>
+    request<{ message: string }>(`/products/${id}`, { method: 'DELETE' }),
+
+  createCategory: (name: string, type: string, parentId?: number) =>
+    request<CategoryDtoResponse>('/categories', {
+      method: 'POST',
+      body: JSON.stringify({ name, type, parentId }),
+    }),
+
+  deleteCategory: (id: number) =>
+    request<{ message: string }>(`/categories/${id}`, { method: 'DELETE' }),
 };

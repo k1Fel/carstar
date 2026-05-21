@@ -4,10 +4,18 @@
 // ============================================
 
 // --- Account ---
+export interface AdminAccountDto {
+  id: number;
+  userName: string;
+  email: string;
+  role: string;
+}
+
 export interface AccountResponseDto {
   id: number;
   email: string;
   userName: string;
+  role: string; // "user" or "admin"
 }
 
 export interface LoginDto {
@@ -133,9 +141,11 @@ export interface OrderItemResponseDto {
 export interface ResponseOrderDto {
   id: number;
   accountId: number;
+  userName: string;
   totalAmount: number;
   status: OrderStatus;
   shippingAddress: string;
+  cancellationReason?: string;
   createdAt: string;
   orderItems: OrderItemResponseDto[];
 }
@@ -149,6 +159,7 @@ export interface CreateOrderDto {
 
 export interface UpdateOrderStatusDto {
   status: string;
+  cancellationReason?: string;
 }
 
 // --- Auth context ---
@@ -156,4 +167,13 @@ export interface AuthState {
   account: AccountResponseDto | null;
   token: string | null;
   isAuthenticated: boolean;
+}
+export interface ProductResponseDto {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  imageUrl?: string;
+  categories: ProductCategoryDto[];
 }

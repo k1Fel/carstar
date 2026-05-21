@@ -21,7 +21,7 @@ export default function Header({
   const [profileOpen, setProfileOpen] = useState(false);
 
   const links = [
-    { id: 'catalog',  label: 'Каталог' },
+    { id: 'catalog', label: 'Каталог' },
     { id: 'selector', label: 'Підбір за авто' },
   ];
 
@@ -52,7 +52,7 @@ export default function Header({
 
         {/* Right icons */}
         <div className={styles.right}>
-          {/* Search icon — restored */}
+          {/* Search icon */}
           <button
             className={styles.iconBtn}
             title="Пошук"
@@ -82,48 +82,96 @@ export default function Header({
             )}
           </button>
 
+          {/* User Menu */}
           {isAuthenticated ? (
-            <div className={styles.profileWrap}>
+            <div className={styles.userMenu}>
               <button
-                className={styles.iconBtn}
+                className={styles.userButton}
                 onClick={() => setProfileOpen(p => !p)}
-                title={account?.userName}
               >
-                <span className={styles.avatarLetters}>
-                  {account?.userName.slice(0, 2).toUpperCase()}
+                <div
+                  className={`${styles.userAvatar} ${
+                    account?.role === 'admin' ? styles.adminAvatar : ''
+                  }`}
+                >
+                  {account?.userName?.[0]?.toUpperCase()}
+                </div>
+
+                <span className={styles.userName}>
+                  {account?.userName}
                 </span>
+
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path
+                    d="M3 4.5L6 7.5L9 4.5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
+
               {profileOpen && (
                 <div className={styles.dropdown}>
-                  <div className={styles.dropHeader}>
-                    <div className={styles.dropName}>{account?.userName}</div>
-                    <div className={styles.dropEmail}>{account?.email}</div>
-                  </div>
+                  {/* Admin badge */}
+                  {account?.role === 'admin' && (
+                    <div className={styles.dropdownAdmin}>
+                      <span className={styles.adminBadgeText}>
+                        ADMIN
+                      </span>
+                    </div>
+                  )}
+
                   <button
-                    className={styles.dropItem}
-                    onClick={() => { onNavigate('profile'); setProfileOpen(false); }}
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      onNavigate('profile');
+                      setProfileOpen(false);
+                    }}
                   >
-                    Профіль
+                   🏠︎ Профіль
                   </button>
+
                   <button
-                    className={styles.dropItem}
-                    onClick={() => { onNavigate('orders'); setProfileOpen(false); }}
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      onNavigate('orders');
+                      setProfileOpen(false);
+                    }}
                   >
-                    Мої замовлення
+                    ⛟ Замовлення
                   </button>
-                  <div className={styles.dropSep} />
+
+                  {account?.role === 'admin' && (
+                    <button
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        onNavigate('admin');
+                        setProfileOpen(false);
+                      }}
+                    >
+                      ᯓ★ Адмін панель
+                    </button>
+                  )}
+
+                  <div className={styles.dropdownDivider}></div>
+
                   <button
-                    className={`${styles.dropItem} ${styles.dropLogout}`}
-                    onClick={() => { logout(); setProfileOpen(false); }}
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      logout();
+                      setProfileOpen(false);
+                    }}
                   >
-                    Вийти
+                    ➜] Вийти
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <button
-              className={styles.authBtn}
+              className={styles.loginButton}
               onClick={onAuthClick}
             >
               Увійти
@@ -138,19 +186,21 @@ export default function Header({
 // --- Inline SVG Icons ---
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
-    <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
   </svg>
 );
+
 const HeartIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M8 13s-6-3.5-6-7.5C2 3.57 3.57 2 5.5 2c1.054 0 2 .5 2.5 1.5C8.5 2.5 9.446 2 10.5 2 12.43 2 14 3.57 14 5.5 14 9.5 8 13 8 13z" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M8 13s-6-3.5-6-7.5C2 3.57 3.57 2 5.5 2c1.054 0 2 .5 2.5 1.5C8.5 2.5 9.446 2 10.5 2 12.43 2 14 3.57 14 5.5 14 9.5 8 13 8 13z" stroke="currentColor" strokeWidth="1.2" />
   </svg>
 );
+
 const CartIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M2 2h1.5l2 7h6l1.5-5H5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="7" cy="13" r="1" fill="currentColor"/>
-    <circle cx="11" cy="13" r="1" fill="currentColor"/>
+    <path d="M2 2h1.5l2 7h6l1.5-5H5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="7" cy="13" r="1" fill="currentColor" />
+    <circle cx="11" cy="13" r="1" fill="currentColor" />
   </svg>
 );

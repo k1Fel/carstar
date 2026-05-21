@@ -11,6 +11,7 @@ namespace api.Models
     public int AccountId { get; set; }
     public decimal TotalAmount { get; set; }
     public string Status { get; set; } = string.Empty; // "Pending", "Completed", "Cancelled"
+    public string? CancellationReason { get; set; }
     public string ShippingAddress { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 

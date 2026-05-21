@@ -122,56 +122,51 @@ namespace api.Services
         }
 
         // ✅ ПОВЕРТАЄ ResponseOrderDto
-        public async Task<ResponseOrderDto?> UpdateOrderStatusAsync(int orderId, string status)
+       public async Task<ResponseOrderDto?> UpdateOrderStatusAsync(int orderId, string status, string? cancellationReason = null)
         {
-            // 1️⃣ ПЕРЕВІРКА ІСНУВАННЯ ЗАМОВЛЕННЯ
             var order = await _orderRepository.GetOrderByIdAsync(orderId);
-            if (order == null)
-            {
-                return null;
-            }
+            if (order == null) return null;
 
-            // 2️⃣ ВАЛІДАЦІЯ ПЕРЕХОДІВ СТАТУСІВ
             var validTransitions = new Dictionary<string, List<string>>
             {
-                ["Pending"] = new List<string> { "Processing", "Cancelled" },
-                ["Processing"] = new List<string> { "Shipped", "Cancelled" },
-                ["Shipped"] = new List<string> { "Delivered" },
-                ["Delivered"] = new List<string>(),
-                ["Cancelled"] = new List<string>()
+                ["Pending"]    = new() { "Processing", "Cancelled" },
+                ["Processing"] = new() { "Shipped", "Cancelled" },
+                ["Shipped"]    = new() { "Delivered" },
+                ["Delivered"]  = new(),
+                ["Cancelled"]  = new()
             };
 
             if (!validTransitions.ContainsKey(order.Status))
-            {
                 throw new ArgumentException($"Невідомий статус: {order.Status}");
-            }
 
             if (!validTransitions[order.Status].Contains(status))
-            {
                 throw new ArgumentException($"Неможливо змінити статус з '{order.Status}' на '{status}'");
-            }
 
-            // 3️⃣ ЯКЩО СКАСОВУЄМО - ПОВЕРТАЄМО ТОВАРИ НА СКЛАД
-            if (status == "Cancelled" && order.Status != "Cancelled")
+            if (status == "Cancelled")
             {
-                foreach (var orderItem in order.OrderItems ?? new List<OrderItem>())
+                order.CancellationReason = cancellationReason;
+                foreach (var item in order.OrderItems ?? new())
                 {
-                    var product = await _productRepository.GetProductByIdAsync(orderItem.ProductId);
+                    var product = await _productRepository.GetProductByIdAsync(item.ProductId);
                     if (product != null)
                     {
-                        product.Stock += orderItem.Quantity;
+                        product.Stock += item.Quantity;
                         await _productRepository.UpdateProductAsync(product.Id, product, new List<int>());
                     }
                 }
             }
 
-            // 4️⃣ ОНОВИТИ СТАТУС
             await _orderRepository.UpdateOrderStatusAsync(orderId, status);
-            
-            // 5️⃣ ОТРИМАТИ ОНОВЛЕНЕ ЗАМОВЛЕННЯ І ПОВЕРНУТИ DTO
-            var updatedOrder = await _orderRepository.GetOrderByIdAsync(orderId);
-            
-            return updatedOrder?.ToOrderResponseDto();
+
+            // Зберегти причину відмови
+            if (status == "Cancelled" && cancellationReason != null)
+            {
+                order.Status = status;
+                await _orderRepository.UpdateOrderAsync(order);
+            }
+
+            var updated = await _orderRepository.GetOrderByIdAsync(orderId);
+            return updated?.ToOrderResponseDto();
         }
 
         // ✅ ПОВЕРТАЄ BOOL

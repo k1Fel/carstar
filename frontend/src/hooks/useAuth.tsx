@@ -40,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clear = () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(ACCOUNT_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+    localStorage.removeItem('favorites');  
     setToken(null);
     setAccount(null);
   };
