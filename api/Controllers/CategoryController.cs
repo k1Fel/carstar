@@ -7,6 +7,7 @@ using api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using api.Services;
 using api.Mappers.CategoryMappers;
+using Microsoft.AspNetCore.Authorization;
 namespace api.Controllers
 {
     [ApiController]
@@ -18,6 +19,7 @@ namespace api.Controllers
         {
             _categoryService = categoryService;
         }
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto createCategoryDto)
         {
@@ -31,6 +33,7 @@ namespace api.Controllers
                 return BadRequest(new { message = "Помилка при створенні категорії", error = ex.Message });
             }
         }
+        [Authorize(Roles = "admin")]    
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCategoryById(int id)
         {
@@ -58,6 +61,7 @@ namespace api.Controllers
             }
 
         }
+        [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDto updateCategoryDto)
         {
@@ -70,6 +74,7 @@ namespace api.Controllers
                 return BadRequest(new { message = "Помилка при оновленні категорії", error = ex.Message }); 
             }
         }
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {

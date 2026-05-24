@@ -26,6 +26,7 @@ namespace api.Services
                 new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
                 new Claim(ClaimTypes.Email,  account.Email),
                 new Claim(ClaimTypes.Name, $"{account.UserName}"),
+                new Claim(ClaimTypes.Role, account.Role),
                 new Claim("UserName", account.UserName)
             };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));

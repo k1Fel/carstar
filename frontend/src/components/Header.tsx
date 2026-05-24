@@ -22,7 +22,7 @@ export default function Header({
 
   const links = [
     { id: 'catalog', label: 'Каталог' },
-    { id: 'selector', label: 'Підбір за авто' },
+  
   ];
 
   return (

@@ -6,6 +6,7 @@ using api.Services;
 using Microsoft.AspNetCore.Mvc;
 using api.Services.Interfaces;
 using api.DTO.Category;
+using Microsoft.AspNetCore.Authorization;
 
 namespace api.Controllers
 {
@@ -21,6 +22,7 @@ namespace api.Controllers
             _productService = productService;
             _categoryService = categoryService;
         }
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto createProductDto)
         {
@@ -73,6 +75,7 @@ namespace api.Controllers
             }
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto updateProductDto)
         {
@@ -96,7 +99,7 @@ namespace api.Controllers
                 return StatusCode(500, new { message = "Внутрішня помилка сервера" });
             }
         }
-
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {

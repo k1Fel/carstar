@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using api.Data;
 using api.DTO;
 using api.DTO.Account;
 using api.Mappers.AccountMappers;
@@ -6,6 +7,7 @@ using api.Services;
 using api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers
 {
@@ -13,6 +15,7 @@ namespace api.Controllers
     [Route("api/account")]
     public class AccountController : ControllerBase
     {
+        private readonly ApplicationDbContext _context;
         private readonly IAccountService _accountService;
         private readonly IJwtService _jwtService;
 
@@ -139,6 +142,68 @@ namespace api.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
+        }
+        [Authorize(Roles = "admin")]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _context.Accounts
+                .Select(a => new AccountResponseDto
+                {
+                    Id = a.Id,
+                    Email = a.Email,
+                    UserName = a.UserName,
+                    Role = a.Role
+                })
+                .ToListAsync();
+            return Ok(users);
+        }
+
+        // Змінити роль — тільки адмін
+        [Authorize(Roles = "admin")]
+        [HttpPatch("users/{id:int}/role")]
+        public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateRoleDto dto)
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            if (currentUserId == id)
+                return BadRequest(new { message = "Не можна змінити власну роль" });
+
+            if (dto.Role != "user" && dto.Role != "admin")
+                return BadRequest(new { message = "Невірна роль. Дозволено: user, admin" });
+
+            var account = await _context.Accounts.FindAsync(id);
+            if (account == null)
+                return NotFound(new { message = "Користувач не знайдено" });
+
+            account.Role = dto.Role;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = $"Роль змінено на {dto.Role}",
+                account = account.ToAccountResponseDto()
+            });
+        }
+
+        // Видалити юзера — тільки адмін
+        [Authorize(Roles = "admin")]
+        [HttpDelete("users/{id:int}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            if (currentUserId == id)
+                return BadRequest(new { message = "Не можна видалити власний акаунт" });
+
+            var account = await _context.Accounts.FindAsync(id);
+            if (account == null)
+                return NotFound(new { message = "Користувача не знайдено" });
+
+            _context.Accounts.Remove(account);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Користувача видалено" });
         }
     }
 }

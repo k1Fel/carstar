@@ -53,9 +53,6 @@ export default function HeroSection({ onCatalogClick }: HeroSectionProps) {
             <button className={styles.btnPrim} onClick={onCatalogClick}>
               Перейти до каталогу
             </button>
-            <button className={styles.btnSec}>
-              Підбір за авто
-            </button>
           </div>
 
           {/* Stats */}

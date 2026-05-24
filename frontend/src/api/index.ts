@@ -38,21 +38,21 @@ async function request<T>(
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
 
+  if (res.status === 401) {
+    localStorage.removeItem('carstar_token');
+    localStorage.removeItem('carstar_account');
+    throw new UnauthorizedError('Сесія закінчилась. Будь ласка, увійдіть знову.');
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
     throw new Error(err.message ?? `HTTP ${res.status}`);
   }
 
-  // 204 No Content
   if (res.status === 204) return undefined as T;
-  if (res.status === 401) {
-    // Очищаємо токен
-    localStorage.removeItem('carstar_token');
-    localStorage.removeItem('carstar_account');
-    // Кидаємо спеціальну помилку
-    throw new UnauthorizedError('Сесія закінчилась. Будь ласка, увійдіть знову.');
-  }
-  return res.json();
+
+  const text = await res.text();
+  return text ? JSON.parse(text) as T : (undefined as T);
   
 }
 
@@ -225,7 +225,21 @@ export const favoriteApi = {
 // Admin  →  /api/account, /api/orders, /api/products
 // ============================================
 export const adminApi = {
-  // Користувачі (поки через звичайний endpoint — розширимо)
+  // Користувачі
+  getAllUsers: () =>
+    request<AccountResponseDto[]>('/account/users'),
+
+  updateUserRole: (id: number, role: string) =>
+    request<{ message: string; account: AccountResponseDto }>(`/account/users/${id}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
+
+  deleteUser: (id: number) =>
+    request<{ message: string }>(`/account/users/${id}`, {
+      method: 'DELETE',
+    }),
+
   getAllOrders: () =>
     request<ResponseOrderDto[]>('/orders/all'),
 

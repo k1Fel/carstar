@@ -92,11 +92,7 @@ export default function ProductPage({ productId, onBack, onAuthRequired }: Produ
               <span className={styles.outBadge}>Немає в наявності</span>
             )}
           </div>
-          <div className={styles.thumbs}>
-            {[0,1,2,3].map(i => (
-              <div key={i} className={`${styles.thumb} ${i === 0 ? styles.thumbActive : ''}`} />
-            ))}
-          </div>
+          
         </div>
 
         {/* Info */}

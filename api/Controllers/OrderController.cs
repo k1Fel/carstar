@@ -103,7 +103,7 @@ namespace api.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> GetAllOrders()
         {
             try
@@ -119,7 +119,7 @@ namespace api.Controllers
         }
 
         [HttpPatch("{id:int}/status")]
-        [Authorize]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusDto dto)
         {
             try
